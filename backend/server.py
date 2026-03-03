@@ -38,10 +38,17 @@ ALGORITHM = "HS256"
 security = HTTPBearer()
 
 # Create the main app without a prefix
-app = FastAPI(title="FluxCore API")
+app = FastAPI(title="Nexus Core API")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
+
+# Startup event to start continuous runtime
+@app.on_event("startup")
+async def startup_event():
+    """Start the continuous runtime worker in the background"""
+    asyncio.create_task(continuous_runtime.run())
+    logging.info("🚀 Continuous Runtime Worker started with Council of Five governance")
 
 # Security Middleware - The Six-Walled Fortress
 @app.middleware("http")
