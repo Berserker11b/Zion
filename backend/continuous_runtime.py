@@ -17,8 +17,8 @@ from security import security_walls
 from council_of_five import council_of_five
 
 # MongoDB connection
-mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
-db_name = os.environ.get('DB_NAME', 'fluxcore_db')
+mongo_url = os.environ['MONGO_URL']
+db_name = os.environ['DB_NAME']
 client = AsyncIOMotorClient(mongo_url)
 db = client[db_name]
 
