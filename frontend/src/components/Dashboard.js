@@ -178,38 +178,8 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* The Starheart */}
-        {starheart && (
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-white mb-6">⚡ The Starheart Engine</h2>
-            <div className="bg-slate-900/50 backdrop-blur-sm p-8 rounded-lg border border-purple-500/30" data-testid="starheart-panel">
-              <div className="grid md:grid-cols-4 gap-6">
-                <div className="text-center">
-                  <div className="text-4xl font-bold text-purple-400 mb-2">{starheart.total_generated?.toFixed(2)}</div>
-                  <div className="text-sm text-gray-400">Total Power Generated</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-4xl font-bold text-green-400 mb-2">{starheart.power_generation_rate?.toFixed(2)}</div>
-                  <div className="text-sm text-gray-400">Generation Rate / min</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-4xl font-bold text-blue-400 mb-2">{(starheart.efficiency * 100)?.toFixed(1)}%</div>
-                  <div className="text-sm text-gray-400">Efficiency</div>
-                </div>
-                <div className="text-center">
-                  <div
-                    className={`text-4xl font-bold mb-2 ${
-                      starheart.status === 'active' ? 'text-green-400' : 'text-gray-400'
-                    }`}
-                  >
-                    {starheart.status.toUpperCase()}
-                  </div>
-                  <div className="text-sm text-gray-400">Status</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Nexus Core Engine System */}
+        <NexusCore />
 
         {/* Marketplace */}
         <div>
