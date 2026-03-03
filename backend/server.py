@@ -333,11 +333,122 @@ async def get_system_stats():
         starheart=starheart
     )
 
+# ===== NEXUS CORE MONITORING ROUTES =====
+
+@api_router.get("/nexus/status")
+async def get_nexus_core_status():
+    """Get complete Nexus Core engine system status"""
+    from nexus_core import nexus_core
+    
+    status = nexus_core.get_system_status()
+    return status
+
+@api_router.get("/nexus/engines")
+async def get_engine_status():
+    """Get status of both Turbine and Starheart engines"""
+    from nexus_core import nexus_core
+    
+    return {
+        "turbine": nexus_core.turbine.__dict__,
+        "starheart": {
+            "name": nexus_core.starheart.name,
+            "status": nexus_core.starheart.status,
+            "efficiency": nexus_core.starheart.base_efficiency,
+            "gravity_strength": nexus_core.starheart.gravity_strength,
+            "total_processed": nexus_core.starheart.total_processed,
+            "ignition_threshold": nexus_core.starheart.ignition_threshold,
+            "ignition_progress": min(100, (nexus_core.starheart.total_processed / nexus_core.starheart.ignition_threshold) * 100)
+        }
+    }
+
+@api_router.get("/nexus/zpms")
+async def get_zpm_batteries():
+    """Get status of all ZPM batteries"""
+    from nexus_core import nexus_core
+    
+    return {
+        "batteries": [
+            {
+                "id": zpm.id,
+                "status": zpm.status,
+                "stored_energy": zpm.stored_energy,
+                "capacity": zpm.capacity,
+                "fill_percentage": (zpm.stored_energy / zpm.capacity) * 100,
+                "compression_level": zpm.compression_level
+            }
+            for zpm in nexus_core.zpms
+        ]
+    }
+
+@api_router.post("/nexus/deploy-zpm")
+async def deploy_zpm_battery(
+    zpm_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Deploy a charged ZPM to convert stored energy to credits"""
+    from nexus_core import nexus_core
+    
+    result = nexus_core.deploy_zpm(zpm_id)
+    
+    if result.get("success"):
+        # Add credits to user
+        credits_to_add = result["credits_generated"]
+        await db.users.update_one(
+            {"id": current_user['user_id']},
+            {"$inc": {"credits": credits_to_add}}
+        )
+        
+        # Log transaction
+        transaction = Transaction(
+            user_id=current_user['user_id'],
+            type="bonus",
+            amount=0.0,
+            credits=credits_to_add,
+            description=f"ZPM {zpm_id} deployed - energy converted to credits"
+        )
+        
+        doc = transaction.model_dump()
+        doc['timestamp'] = doc['timestamp'].isoformat()
+        await db.transactions.insert_one(doc)
+        
+        return {
+            "success": True,
+            "message": f"ZPM {zpm_id} deployed successfully",
+            "credits_added": credits_to_add,
+            "energy_released": result["energy_released"]
+        }
+    
+    return result
+
+@api_router.get("/nexus/bus-network")
+async def get_bus_network_status():
+    """Get Nexus Bus Network (secure tunnel) status"""
+    from nexus_core import nexus_core
+    
+    return {
+        "throughput": nexus_core.bus.throughput,
+        "total_routed": nexus_core.bus.total_routed,
+        "filter_efficiency": nexus_core.bus.filter_efficiency,
+        "status": "active"
+    }
+
+@api_router.get("/nexus/cyber-worms")
+async def get_cyber_worms_status():
+    """Get Cyber Worms behavior and distribution"""
+    from nexus_core import nexus_core
+    
+    return {
+        "total_worms": nexus_core.worms.total_worms,
+        "feeder_worms": nexus_core.worms.feeder_worms,
+        "compressor_worms": nexus_core.worms.compressor_worms,
+        "starheart_active": nexus_core.starheart.status == "active"
+    }
+
 # ===== LEGACY/TEST ROUTES =====
 
 @api_router.get("/")
 async def root():
-    return {"message": "FluxCore API - Where attacks become power ⚡"}
+    return {"message": "Nexus Core API - Where attacks become power ⚡"}
 
 # Include the router in the main app
 app.include_router(api_router)
