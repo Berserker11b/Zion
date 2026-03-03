@@ -29,23 +29,61 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+# JWT Settings
+SECRET_KEY = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production')
+ALGORITHM = "HS256"
+security = HTTPBearer()
+
 # Create the main app without a prefix
-app = FastAPI()
+app = FastAPI(title="FluxCore API")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
-
-# Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
+# Security Middleware - The Six-Walled Fortress
+@app.middleware("http")
+async def security_fortress_middleware(request: Request, call_next):
+    \"\"\"Every request passes through the Six-Walled Fortress\"\"\"
     
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    # Check if request should pass through walls
+    if request.url.path.startswith("/api"):
+        wall_result = await security_walls.check_walls(request, db)
+        if wall_result:
+            # Attack blocked! Energy generated!
+            return {
+                "error": "Access temporarily restricted",
+                "message": "The Fortress protects. Your attempt strengthens our walls.",
+                "wall_breached": wall_result[\"wall\"],
+                "entropy_generated": wall_result[\"entropy\"]
+            }
+    
+    response = await call_next(request)
+    return response
 
-class StatusCheckCreate(BaseModel):
-    client_name: str
+# Helper Functions
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+def verify_password(password: str, hashed: str) -> bool:
+    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+
+def create_token(user_id: str, email: str) -> str:
+    payload = {
+        "user_id": user_id,
+        "email": email,
+        "exp": datetime.now(timezone.utc) + timedelta(days=7)
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
