@@ -454,11 +454,91 @@ async def get_cyber_worms_status():
         "starheart_active": nexus_core.starheart.status == "active"
     }
 
+# ===== COUNCIL OF FIVE ROUTES =====
+
+@api_router.get("/council/status")
+async def get_council_status():
+    """Get current status of all five Council members"""
+    return {
+        "abbott": {
+            "name": council_of_five.abbott.name,
+            "role": council_of_five.abbott.role,
+            "threat_level": council_of_five.abbott.threat_level,
+            "resonance_frequency": council_of_five.abbott.resonance_frequency,
+            "antibody_responses": council_of_five.abbott.antibody_responses
+        },
+        "lethani": {
+            "name": council_of_five.lethani.name,
+            "role": council_of_five.lethani.role,
+            "balance_score": council_of_five.lethani.balance_score,
+            "decisions_made": council_of_five.lethani.decisions_made
+        },
+        "thyra": {
+            "name": council_of_five.thyra.name,
+            "role": council_of_five.thyra.role,
+            "protection_level": council_of_five.thyra.protection_level,
+            "threats_neutralized": council_of_five.thyra.threats_neutralized,
+            "drills_conducted": council_of_five.thyra.drills_conducted
+        },
+        "twins": {
+            "name": council_of_five.twins.name,
+            "role": council_of_five.twins.role,
+            "learning_stage": council_of_five.twins.learning_stage,
+            "patterns_learned": len(council_of_five.twins.patterns_learned),
+            "innovations_discovered": council_of_five.twins.innovations_discovered
+        },
+        "mother": {
+            "name": council_of_five.mother.name,
+            "role": council_of_five.mother.role,
+            "twins_maturity": council_of_five.mother.twins_maturity,
+            "control_level": council_of_five.mother.control_level,
+            "guidance_given": council_of_five.mother.guidance_given
+        },
+        "council_stats": {
+            "total_sessions": council_of_five.council_sessions,
+            "unanimous_decisions": council_of_five.unanimous_decisions
+        }
+    }
+
+@api_router.get("/council/latest-decision")
+async def get_latest_council_decision():
+    """Get the most recent Council decision"""
+    # Trigger a council session with current system state
+    from nexus_core import nexus_core
+    
+    wall_stats = security_walls.get_wall_stats()
+    recent_events = await db.security_events.find().sort("timestamp", -1).limit(10).to_list(10)
+    
+    system_state = {
+        "available_power": 100.0,
+        "power_demand": 50.0,
+        "wall_stats": wall_stats,
+        "security_events": recent_events
+    }
+    
+    decision = council_of_five.convene(system_state)
+    return decision
+
+@api_router.get("/runtime/status")
+async def get_runtime_status():
+    """Get continuous runtime worker status"""
+    import time
+    
+    uptime = time.time() - continuous_runtime.start_time if continuous_runtime.start_time else 0
+    
+    return {
+        "running": continuous_runtime.running,
+        "cycles_completed": continuous_runtime.cycles_completed,
+        "total_power_produced": continuous_runtime.total_power_produced,
+        "uptime_seconds": uptime,
+        "uptime_hours": uptime / 3600
+    }
+
 # ===== LEGACY/TEST ROUTES =====
 
 @api_router.get("/")
 async def root():
-    return {"message": "Nexus Core API - Where attacks become power ⚡"}
+    return {"message": "Nexus Core API - Governed by the Council of Five ⚡"}
 
 # Include the router in the main app
 app.include_router(api_router)
