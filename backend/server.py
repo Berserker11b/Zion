@@ -241,7 +241,7 @@ async def purchase_credits(
 
 @api_router.get("/monitor/walls")
 async def get_wall_status():
-    \"\"\"Get real-time status of the Six-Walled Fortress\"\"\"
+    """Get real-time status of the Six-Walled Fortress"""
     wall_stats = security_walls.get_wall_stats()
     
     # Add active threat count (from recent events)
