@@ -256,7 +256,7 @@ async def get_wall_status():
 
 @api_router.get("/monitor/starheart")
 async def get_starheart_status():
-    \"\"\"Get real-time status of the Starheart power generation\"\"\"
+    """Get real-time status of the Starheart power generation"""
     
     # Calculate total power generated
     pipeline = [
