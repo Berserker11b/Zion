@@ -45,7 +45,7 @@ class SecurityEvent(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    event_type: Literal["rate_limit", "blocked", "suspicious", "ddos_attempt"]
+    event_type: Literal["rate_limit", "burst", "blocked", "suspicious", "ddos_attempt"]
     ip_address: str
     endpoint: str
     wall_layer: int  # 1-6 representing which wall caught it
