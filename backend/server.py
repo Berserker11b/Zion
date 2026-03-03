@@ -44,18 +44,22 @@ api_router = APIRouter(prefix="/api")
 @app.middleware("http")
 async def security_fortress_middleware(request: Request, call_next):
     """Every request passes through the Six-Walled Fortress"""
+    from fastapi.responses import JSONResponse
     
     # Check if request should pass through walls
     if request.url.path.startswith("/api"):
         wall_result = await security_walls.check_walls(request, db)
         if wall_result:
             # Attack blocked! Energy generated!
-            return {
-                "error": "Access temporarily restricted",
-                "message": "The Fortress protects. Your attempt strengthens our walls.",
-                "wall_breached": wall_result["wall"],
-                "entropy_generated": wall_result["entropy"]
-            }
+            return JSONResponse(
+                status_code=429,
+                content={
+                    "error": "Access temporarily restricted",
+                    "message": "The Fortress protects. Your attempt strengthens our walls.",
+                    "wall_breached": wall_result["wall"],
+                    "entropy_generated": wall_result["entropy"]
+                }
+            )
     
     response = await call_next(request)
     return response
