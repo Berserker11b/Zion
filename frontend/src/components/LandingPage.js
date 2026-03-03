@@ -11,11 +11,11 @@ const LandingPage = () => {
         <div className="text-center mb-16">
           <h1 className="text-6xl font-bold text-white mb-6">
             FluxCore
-            <span className="block text-purple-400 mt-2">Where Attacks Become Power</span>
+            <span className="block text-purple-400 mt-2">Powered by Nexus Core Technology</span>
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
             The world's first self-sustaining computational platform. 
-            Every threat makes us stronger. Every attack generates more power.
+            Advanced engine architecture converts system inefficiencies into pure computational power.
           </p>
           <div className="flex gap-4 justify-center">
             <button
