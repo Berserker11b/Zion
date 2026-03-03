@@ -117,21 +117,31 @@ class SecurityWalls:
         await self._feed_starheart(db, wall_result["entropy"])
     
     async def _feed_starheart(self, db, entropy: float):
-        """Convert entropy into power credits"""
+        """Feed entropy to the Nexus Core engine system"""
         from models import PowerGeneration
+        from nexus_core import nexus_core
         
-        # Conversion rate: 1 entropy = 0.1 power credits
-        power = entropy * 0.1
+        # Process through Nexus Core (engines, alternator, ZPMs, etc.)
+        wall_entropy = {
+            wall_num: self.wall_stats[wall_num]["entropy"] 
+            for wall_num in range(1, 7)
+        }
         
-        power_gen = PowerGeneration(
-            source="entropy_conversion",
-            power_amount=power,
-            efficiency=random.uniform(0.85, 0.98)
-        )
+        result = nexus_core.process_entropy_from_walls(wall_entropy)
         
-        doc = power_gen.model_dump()
-        doc['timestamp'] = doc['timestamp'].isoformat()
-        await db.power_generation.insert_one(doc)
+        # Log power generation from both engines
+        total_power = result.get("total_power_generated", 0)
+        
+        if total_power > 0:
+            power_gen = PowerGeneration(
+                source="nexus_core_engines",
+                power_amount=total_power,
+                efficiency=random.uniform(0.85, 0.98)
+            )
+            
+            doc = power_gen.model_dump()
+            doc['timestamp'] = doc['timestamp'].isoformat()
+            await db.power_generation.insert_one(doc)
     
     def get_wall_stats(self):
         """Get current stats for all walls"""
