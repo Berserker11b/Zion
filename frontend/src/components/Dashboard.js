@@ -179,6 +179,9 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Council of Five */}
+        <CouncilOfFive />
+
         {/* Nexus Core Engine System */}
         <NexusCore />
 
