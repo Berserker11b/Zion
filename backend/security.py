@@ -141,6 +141,7 @@ class SecurityWalls:
                 "name": WALL_NAMES[i],
                 "total_blocked": self.wall_stats[i]["blocked"],
                 "entropy_generated": self.wall_stats[i]["entropy"],
+                "active_threats": 0,  # Will be updated by the API endpoint
                 "status": "active" if self.wall_stats[i]["blocked"] < 100 else "fortified"
             }
             for i in range(1, 7)
