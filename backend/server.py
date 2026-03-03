@@ -296,7 +296,7 @@ async def get_starheart_status():
 
 @api_router.get("/monitor/stats")
 async def get_system_stats():
-    \"\"\"Get complete system statistics\"\"\"
+    """Get complete system statistics"""
     
     total_users = await db.users.count_documents({})
     
