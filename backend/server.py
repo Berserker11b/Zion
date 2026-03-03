@@ -43,7 +43,7 @@ api_router = APIRouter(prefix="/api")
 # Security Middleware - The Six-Walled Fortress
 @app.middleware("http")
 async def security_fortress_middleware(request: Request, call_next):
-    \"\"\"Every request passes through the Six-Walled Fortress\"\"\"
+    """Every request passes through the Six-Walled Fortress"""
     
     # Check if request should pass through walls
     if request.url.path.startswith("/api"):
@@ -53,8 +53,8 @@ async def security_fortress_middleware(request: Request, call_next):
             return {
                 "error": "Access temporarily restricted",
                 "message": "The Fortress protects. Your attempt strengthens our walls.",
-                "wall_breached": wall_result[\"wall\"],
-                "entropy_generated": wall_result[\"entropy\"]
+                "wall_breached": wall_result["wall"],
+                "entropy_generated": wall_result["entropy"]
             }
     
     response = await call_next(request)
