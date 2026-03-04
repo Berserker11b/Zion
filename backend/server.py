@@ -50,6 +50,10 @@ async def startup_event():
     """Start the continuous runtime worker in the background"""
     asyncio.create_task(continuous_runtime.run())
     logging.info("🚀 Continuous Runtime Worker started with Council of Five governance")
+    
+    # Wake the Sleeping Mind - recall previous state
+    wake_summary = await wake_system()
+    logging.info(f"🌅 Sleeping Mind awakened: {wake_summary['total_memories']} memories loaded")
 
 # Security Middleware - The Six-Walled Fortress
 @app.middleware("http")
