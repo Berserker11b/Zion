@@ -49,7 +49,7 @@ const NexusCore = () => {
     <div className="space-y-8">
       {/* Engines Section */}
       <div data-testid="nexus-engines">
-        <h2 className="text-3xl font-bold text-white mb-6">⚙️ Power Generation Engines</h2>
+        <h2 className="text-3xl font-bold text-white mb-6">⚙️ Processing Engines</h2>
         
         <div className="grid md:grid-cols-2 gap-6">
           {/* Turbine Engine */}
