@@ -131,9 +131,9 @@ const Dashboard = () => {
       </div>
 
       <div className="container mx-auto px-6 py-8">
-        {/* The Six-Walled Fortress */}
+        {/* Security Infrastructure */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-white mb-6">🛡️ The Six-Walled Fortress</h2>
+          <h2 className="text-3xl font-bold text-white mb-6">🛡️ Security Infrastructure</h2>
           <div className="grid md:grid-cols-3 gap-4">
             {walls.map((wall) => (
               <div
