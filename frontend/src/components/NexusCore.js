@@ -170,7 +170,7 @@ const NexusCore = () => {
           ))}
         </div>
         <p className="text-sm text-gray-400 mt-4">
-          💡 Compressed energy storage using advanced compression algorithms. Deploy when charged to convert to credits.
+          💡 Advanced compression storage using proprietary algorithms. Deploy when charged to convert to credits.
         </p>
       </div>
 
