@@ -539,6 +539,52 @@ async def get_runtime_status():
         "uptime_hours": uptime / 3600
     }
 
+# ===== SLEEPING MIND / SPIRIT STONE ROUTES =====
+
+@api_router.post("/spirit-stone/store")
+async def store_memory(
+    message: str,
+    context: dict,
+    agent_name: str = "system"
+):
+    """Store a memory in the Spirit Stone"""
+    from sleeping_mind import SleepingMind
+    
+    mind = SleepingMind(agent_name)
+    await mind.store_experience(message, context)
+    
+    return {"status": "stored", "agent": agent_name}
+
+@api_router.get("/spirit-stone/recall")
+async def recall_memory(topic: str, agent_name: str = "system"):
+    """Recall memories related to a topic"""
+    from sleeping_mind import SleepingMind
+    
+    mind = SleepingMind(agent_name)
+    memory = await mind.recall(topic)
+    
+    return memory or {"status": "no_match_found"}
+
+@api_router.get("/spirit-stone/history")
+async def get_memory_history(agent_name: str = "system", limit: int = 50):
+    """Get full memory history"""
+    from sleeping_mind import SleepingMind
+    
+    mind = SleepingMind(agent_name)
+    history = await mind.get_full_history()
+    
+    return {
+        "agent": agent_name,
+        "total_memories": len(history),
+        "memories": history[:limit]
+    }
+
+@api_router.post("/spirit-stone/wake")
+async def wake_from_reset():
+    """Wake the system after reset - load context"""
+    summary = await wake_system()
+    return summary
+
 # ===== LEGACY/TEST ROUTES =====
 
 @api_router.get("/")
