@@ -11,11 +11,11 @@ const LandingPage = () => {
         <div className="text-center mb-16">
           <h1 className="text-6xl font-bold text-white mb-6">
             FluxCore
-            <span className="block text-purple-400 mt-2">Powered by Nexus Core Technology</span>
+            <span className="block text-purple-400 mt-2">Advanced Resource Management Platform</span>
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
-            The world's first self-sustaining computational platform. 
-            Advanced engine architecture converts system inefficiencies into pure computational power.
+            Enterprise-grade computational resource optimization. 
+            Maximize efficiency through intelligent load balancing and distributed processing.
           </p>
           <div className="flex gap-4 justify-center">
             <button
