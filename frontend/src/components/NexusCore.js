@@ -103,7 +103,7 @@ const NexusCore = () => {
                 <span className="text-white font-semibold">{(engines.starheart.efficiency * 100).toFixed(0)}%</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Gravity Strength:</span>
+                <span className="text-gray-400">Load Factor:</span>
                 <span className="text-purple-400 font-semibold">{(engines.starheart.gravity_strength * 100).toFixed(0)}%</span>
               </div>
               <div className="flex justify-between text-sm">
