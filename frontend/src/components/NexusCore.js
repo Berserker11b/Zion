@@ -127,9 +127,9 @@ const NexusCore = () => {
         </div>
       </div>
 
-      {/* ZPM Batteries */}
+      {/* Storage Batteries */}
       <div data-testid="zpm-batteries">
-        <h2 className="text-3xl font-bold text-white mb-6">🔋 ZPM Storage Batteries</h2>
+        <h2 className="text-3xl font-bold text-white mb-6">🔋 Storage Batteries</h2>
         
         <div className="grid md:grid-cols-5 gap-4">
           {zpms.map((zpm) => (
