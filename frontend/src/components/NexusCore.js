@@ -206,21 +206,21 @@ const NexusCore = () => {
             <h3 className="text-2xl font-bold text-pink-400 mb-4">🤖 Processing Agents</h3>
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Total Active:</span>
-                <span className="text-white font-semibold">{cyberWorms.total_worms} worms</span>
+                <span className="text-gray-400">Active Agents:</span>
+                <span className="text-white font-semibold">{cyberWorms.total_worms} agents</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Feeder Worms:</span>
+                <span className="text-gray-400">Processing Units:</span>
                 <span className="text-purple-400 font-semibold">{cyberWorms.feeder_worms}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Compressor Worms:</span>
+                <span className="text-gray-400">Storage Units:</span>
                 <span className="text-blue-400 font-semibold">{cyberWorms.compressor_worms}</span>
               </div>
               <p className="text-xs text-gray-400 mt-4">
                 {cyberWorms.starheart_active 
-                  ? '⚡ Split mode: Feeding Starheart + Compressing for ZPMs'
-                  : '🔄 All worms compressing energy into ZPM batteries'}
+                  ? '⚡ Distributed mode: Processing + Storage optimization'
+                  : '🔄 All agents optimizing storage compression'}
               </p>
             </div>
           </div>
