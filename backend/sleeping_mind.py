@@ -22,7 +22,13 @@ class SpiritStone:
     
     def __init__(self, agent_name: str):
         self.agent_name = agent_name
-        self.collection = db[f"spirit_stone_{agent_name}"]
+        self.db = None
+    
+    def _get_collection(self):
+        """Lazy load collection"""
+        if self.db is None:
+            self.db = get_db()
+        return self.db[f"spirit_stone_{self.agent_name}"]
     
     async def store(self, message: str, context: Dict, metadata: Dict = None):
         """Store complete context - no lossy compression"""
