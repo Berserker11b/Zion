@@ -176,10 +176,10 @@ const NexusCore = () => {
 
       {/* Bus Network & Cyber Worms */}
       <div className="grid md:grid-cols-2 gap-6">
-        {/* Bus Network */}
+        {/* Network Hub */}
         {busNetwork && (
           <div className="bg-slate-900/50 backdrop-blur-sm p-6 rounded-lg border border-cyan-500/30" data-testid="bus-network">
-            <h3 className="text-2xl font-bold text-cyan-400 mb-4">🌐 Nexus Bus Network</h3>
+            <h3 className="text-2xl font-bold text-cyan-400 mb-4">🌐 Network Hub</h3>
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-400">Current Throughput:</span>
