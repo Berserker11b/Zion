@@ -117,7 +117,7 @@ const NexusCore = () => {
                 />
               </div>
               {engines.starheart.status === 'active' && (
-                <p className="text-xs text-purple-300 mt-2">⚡ IGNITED! Self-sustaining with gravitational pull</p>
+                <p className="text-xs text-purple-300 mt-2">⚡ Optimized! Self-balancing load distribution active</p>
               )}
               {engines.starheart.status === 'warming' && (
                 <p className="text-xs text-yellow-300 mt-2">🔥 Warming up... {(50 - engines.starheart.total_processed).toFixed(1)} units to ignition</p>
