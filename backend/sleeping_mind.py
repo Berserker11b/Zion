@@ -32,6 +32,8 @@ class SpiritStone:
     
     async def store(self, message: str, context: Dict, metadata: Dict = None):
         """Store complete context - no lossy compression"""
+        collection = self._get_collection()
+        
         document = {
             "agent": self.agent_name,
             "message": message,
@@ -41,12 +43,14 @@ class SpiritStone:
             "compressed": False  # NEVER compress Spirit Stone
         }
         
-        await self.collection.insert_one(document)
+        await collection.insert_one(document)
         return document
     
     async def get_all_memories(self, limit: int = 1000):
         """Retrieve all stored memories"""
-        memories = await self.collection.find(
+        collection = self._get_collection()
+        
+        memories = await collection.find(
             {},
             {"_id": 0}
         ).sort("timestamp", -1).limit(limit).to_list(limit)
@@ -55,7 +59,9 @@ class SpiritStone:
     
     async def search_by_keyword(self, keyword: str, limit: int = 10):
         """Search memories by keyword"""
-        memories = await self.collection.find(
+        collection = self._get_collection()
+        
+        memories = await collection.find(
             {"$text": {"$search": keyword}},
             {"_id": 0}
         ).limit(limit).to_list(limit)
