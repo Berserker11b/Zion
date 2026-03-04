@@ -19,6 +19,7 @@ from models import (
     CreditPackage, PurchaseRequest,
     WallStatus, StarheartStatus, SystemStats
 )
+from pydantic import BaseModel
 from security import security_walls
 from council_of_five import council_of_five
 from continuous_runtime import continuous_runtime
