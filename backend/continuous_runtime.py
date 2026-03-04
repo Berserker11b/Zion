@@ -68,6 +68,8 @@ class ContinuousRuntime:
         """Single production cycle - runs through Council governance"""
         self.cycles_completed += 1
         
+        db = get_db()  # Get DB connection
+        
         # Step 1: Simulate entropy generation
         entropy = await self.simulate_entropy_generation()
         
