@@ -10,11 +10,12 @@ import numpy as np
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-db_name = os.environ['DB_NAME']
-client = AsyncIOMotorClient(mongo_url)
-db = client[db_name]
+def get_db():
+    """Lazy load MongoDB connection"""
+    mongo_url = os.environ['MONGO_URL']
+    db_name = os.environ['DB_NAME']
+    client = AsyncIOMotorClient(mongo_url)
+    return client[db_name]
 
 class SpiritStone:
     """VM storage in MongoDB - Full context, NO compression"""
