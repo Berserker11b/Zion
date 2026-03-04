@@ -200,10 +200,10 @@ const NexusCore = () => {
           </div>
         )}
 
-        {/* Cyber Worms */}
+        {/* Processing Agents */}
         {cyberWorms && (
           <div className="bg-slate-900/50 backdrop-blur-sm p-6 rounded-lg border border-pink-500/30" data-testid="cyber-worms">
-            <h3 className="text-2xl font-bold text-pink-400 mb-4">🐛 Cyber Worms</h3>
+            <h3 className="text-2xl font-bold text-pink-400 mb-4">🤖 Processing Agents</h3>
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-400">Total Active:</span>
