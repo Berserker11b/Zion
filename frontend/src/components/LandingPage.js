@@ -39,17 +39,17 @@ const LandingPage = () => {
         <div className="grid md:grid-cols-3 gap-8 mt-20">
           <div className="bg-slate-900/50 backdrop-blur-sm p-8 rounded-lg border border-purple-500/30">
             <div className="text-4xl mb-4">🛡️</div>
-            <h3 className="text-2xl font-bold text-white mb-3">The Six-Walled Fortress</h3>
+            <h3 className="text-2xl font-bold text-white mb-3">Multi-Layer Security</h3>
             <p className="text-gray-300">
-              Advanced security that doesn't just block attacks - it converts them into computational power.
+              Advanced security infrastructure with redundant protection layers and intelligent threat response.
             </p>
           </div>
 
           <div className="bg-slate-900/50 backdrop-blur-sm p-8 rounded-lg border border-purple-500/30">
             <div className="text-4xl mb-4">⚡</div>
-            <h3 className="text-2xl font-bold text-white mb-3">The Starheart Engine</h3>
+            <h3 className="text-2xl font-bold text-white mb-3">Resource Optimization Engine</h3>
             <p className="text-gray-300">
-              Our proprietary system converts entropy and waste into pure computational resources.
+              Proprietary algorithms maximize resource utilization and minimize waste through intelligent distribution.
             </p>
           </div>
 
@@ -57,7 +57,7 @@ const LandingPage = () => {
             <div className="text-4xl mb-4">💎</div>
             <h3 className="text-2xl font-bold text-white mb-3">Credit Marketplace</h3>
             <p className="text-gray-300">
-              Purchase computational power credits. The more demand, the more power we generate.
+              Purchase computational credits. Flexible pricing tiers for every use case.
             </p>
           </div>
         </div>
