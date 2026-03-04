@@ -52,10 +52,10 @@ const NexusCore = () => {
         <h2 className="text-3xl font-bold text-white mb-6">⚙️ Processing Engines</h2>
         
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Turbine Engine */}
+          {/* Primary Engine */}
           <div className="bg-slate-900/50 backdrop-blur-sm p-6 rounded-lg border border-orange-500/30" data-testid="turbine-engine">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-orange-400">Turbine Engine</h3>
+              <h3 className="text-xl font-bold text-orange-400">Primary Engine</h3>
               <span className="px-3 py-1 rounded bg-orange-500/20 text-orange-300 text-sm font-semibold">
                 {engines.turbine.status.toUpperCase()}
               </span>
