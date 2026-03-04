@@ -80,14 +80,14 @@ const NexusCore = () => {
             </div>
           </div>
 
-          {/* Starheart Engine */}
+          {/* Advanced Engine */}
           <div className={`bg-slate-900/50 backdrop-blur-sm p-6 rounded-lg border ${
             engines.starheart.status === 'active' ? 'border-purple-500 ring-2 ring-purple-500/50' :
             engines.starheart.status === 'warming' ? 'border-yellow-500/30' :
             'border-gray-500/30'
           }`} data-testid="starheart-engine">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-purple-400">Starheart Engine</h3>
+              <h3 className="text-xl font-bold text-purple-400">Advanced Engine</h3>
               <span className={`px-3 py-1 rounded text-sm font-semibold ${
                 engines.starheart.status === 'active' ? 'bg-purple-500/20 text-purple-300' :
                 engines.starheart.status === 'warming' ? 'bg-yellow-500/20 text-yellow-300' :
