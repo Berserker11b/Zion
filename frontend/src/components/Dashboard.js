@@ -149,8 +149,8 @@ const Dashboard = () => {
               >
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <div className="text-sm text-gray-400">Wall {wall.wall_number}</div>
-                    <div className="text-lg font-bold text-white">{wall.name?.split(' - ')[1] || `Wall ${wall.wall_number}`}</div>
+                    <div className="text-sm text-gray-400">Layer {wall.wall_number}</div>
+                    <div className="text-lg font-bold text-white">Security Layer {wall.wall_number}</div>
                   </div>
                   <div
                     className={`px-2 py-1 rounded text-xs font-semibold ${
@@ -170,8 +170,8 @@ const Dashboard = () => {
                     <span className="text-white font-semibold">{wall.total_blocked}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Entropy Generated:</span>
-                    <span className="text-purple-400 font-semibold">{wall.entropy_generated?.toFixed(2)} ⚡</span>
+                    <span className="text-gray-400">Data Processed:</span>
+                    <span className="text-purple-400 font-semibold">{wall.entropy_generated?.toFixed(2)} units</span>
                   </div>
                 </div>
               </div>
@@ -179,10 +179,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Council of Five */}
-        <CouncilOfFive />
-
-        {/* Nexus Core Engine System */}
+        {/* System Resources - Hide Council from public view */}
         <NexusCore />
 
         {/* Marketplace */}
