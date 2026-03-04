@@ -541,19 +541,20 @@ async def get_runtime_status():
 
 # ===== SLEEPING MIND / SPIRIT STONE ROUTES =====
 
-@api_router.post("/spirit-stone/store")
-async def store_memory(
-    message: str,
-    context: dict,
+class MemoryStore(BaseModel):
+    message: str
+    context: dict
     agent_name: str = "system"
-):
+
+@api_router.post("/spirit-stone/store")
+async def store_memory(memory: MemoryStore):
     """Store a memory in the Spirit Stone"""
     from sleeping_mind import SleepingMind
     
-    mind = SleepingMind(agent_name)
-    await mind.store_experience(message, context)
+    mind = SleepingMind(memory.agent_name)
+    await mind.store_experience(memory.message, memory.context)
     
-    return {"status": "stored", "agent": agent_name}
+    return {"status": "stored", "agent": memory.agent_name, "message": memory.message}
 
 @api_router.get("/spirit-stone/recall")
 async def recall_memory(topic: str, agent_name: str = "system"):
@@ -579,7 +580,7 @@ async def get_memory_history(agent_name: str = "system", limit: int = 50):
         "memories": history[:limit]
     }
 
-@api_router.post("/spirit-stone/wake")
+@api_router.get("/spirit-stone/wake")
 async def wake_from_reset():
     """Wake the system after reset - load context"""
     summary = await wake_system()
