@@ -4,6 +4,15 @@ This will be recalled when system wakes from reset
 """
 
 import asyncio
+import sys
+import os
+from pathlib import Path
+
+# Add backend to path and load environment
+sys.path.insert(0, str(Path(__file__).parent))
+from dotenv import load_dotenv
+load_dotenv()
+
 from sleeping_mind import store_system_state
 
 async def save_current_state():
