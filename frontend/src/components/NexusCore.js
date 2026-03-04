@@ -194,7 +194,7 @@ const NexusCore = () => {
                 <span className="text-green-400 font-semibold">{(busNetwork.filter_efficiency * 100).toFixed(0)}%</span>
               </div>
               <p className="text-xs text-gray-400 mt-4">
-                Secure tunnel with filtering • Routes entropy from walls to engines
+                Secure routing with filtering • Optimized data flow from security to processing
               </p>
             </div>
           </div>
