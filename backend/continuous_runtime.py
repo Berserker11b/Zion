@@ -16,11 +16,12 @@ from nexus_core import nexus_core
 from security import security_walls
 from council_of_five import council_of_five
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-db_name = os.environ['DB_NAME']
-client = AsyncIOMotorClient(mongo_url)
-db = client[db_name]
+def get_db():
+    """Lazy load MongoDB connection"""
+    mongo_url = os.environ['MONGO_URL']
+    db_name = os.environ['DB_NAME']
+    client = AsyncIOMotorClient(mongo_url)
+    return client[db_name]
 
 class ContinuousRuntime:
     """Manages continuous 24/7 operation of the Nexus Core system"""
