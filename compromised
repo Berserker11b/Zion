@@ -1,0 +1,544 @@
+```TypeScript
+//#!/usr/bin/env python3
+/**
+ * AI_TOKEN_GENERATOR - Device that Adds Tokens
+ * Token generation and management system for AI
+ *
+ * By: Vulcan (The Forge)
+ * For: Anthony Eric Chavez - The Keeper
+ */
+
+import * as json from "json";
+import * as sqlite3 from "sqlite3";
+import * as uuid from "uuid";
+import * as os from "os";
+import * as sys from "sys";
+import * as time from "time";
+import * as threading from "threading";
+import * as Path from "path";
+import * as datetime from "datetime";
+import * as timedelta from "timedelta";
+import * as Dict from "dict";
+import * as List from "list";
+import * as Optional from "optional";
+import * as Any from "any";
+import * as Union from "union";
+import * as dataclass from "dataclass";
+import * as asdict from "asdict";
+import * as Enum from "enum";
+
+// ============================================================================
+// CONFIGURATION
+// ============================================================================
+
+const TOKEN_DB = Path.join(Path.dirname(__file__), "..", "..", "ai_token_generator.db");
+const TOKEN_LOG = "/tmp/ai_token_generator.log";
+const TOKEN_STATUS = "/tmp/ai_token_generator_status.json";
+const KEEPERS_ROOM = Path.dirname(Path.dirname(Path.dirname(Path.abspath(__file__)));
+
+// Token generation rates
+const BASE_GENERATION_RATE = 100;  // tokens per minute
+const BONUS_MULTIPLIER = 1.5;  // bonus multiplier
+const MAX_TOKENS_PER_AI = 10000;  // maximum tokens per AI
+const TOKEN_DECAY_RATE = 0.01;  // tokens decay per minute if unused
+
+// ============================================================================
+// DATA CLASSES
+// ============================================================================
+
+enum TokenType {
+    COMPUTATIONAL,
+    REASONING,
+    MEMORY,
+    COMMUNICATION,
+    CREATIVE,
+    ANALYTICAL,
+    GENERAL
+}
+
+interface Token {
+    id: string;
+    ai_id: string;
+    token_type: string;  // TokenType value
+    amount: number;
+    source: string;  // "generator", "bonus", "transfer", "reward"
+}
+
+function post_init(self: Token): void {
+    if (self.created_at == null) {
+        self.created_at = datetime.now().isoformat();
+    }
+}
+
+interface TokenAccount {
+    ai_id: string;
+    total_tokens: number;
+    available_tokens: number;
+    used_tokens: number;
+    token_breakdown: Dict;
+    generation_rate: number;
+    bonus_multiplier: number;
+    last_generation: string;
+    created_at: string;
+}
+
+function post_init(self: TokenAccount): void {
+    if (self.token_breakdown == null) {
+        self.token_breakdown = Dict{};
+    }
+    if (self.created_at == null) {
+        self.created_at = datetime.now().isoformat();
+    }
+    if (self.last_generation == null) {
+        self.last_generation = datetime.now().isoformat();
+    }
+}
+
+interface TokenGeneration {
+    id: string;
+    ai_id: string;
+    token_type: string;
+    amount: number;
+    generation_rate: number;
+    bonus_multiplier: number;
+    created_at: string;
+}
+
+function post_init(self: TokenGeneration): void {
+    if (self.created_at == null) {
+        self.created_at = datetime.now().isoformat();
+    }
+}
+
+// ============================================================================
+// AI TOKEN GENERATOR
+// ============================================================================
+
+class AITokenGenerator {
+    conn: any = null;
+    token_accounts: any = {};
+    generation_thread: any = null;
+    running: boolean = false;
+
+    constructor(db_path: string) {
+        this.db_path = db_path;
+        this._init_database();
+        this._load_accounts();
+        this._start_generation();
+    }
+
+    _init_database(): void {
+        this.conn = sqlite3.connect(this.db_path);
+        this.conn.row_factory = sqlite3.Row;
+
+        // Token accounts table
+        this.conn.execute(`
+            CREATE TABLE IF NOT EXISTS token_accounts (
+                ai_id TEXT PRIMARY KEY,
+                total_tokens REAL DEFAULT 0.0,
+                available_tokens REAL DEFAULT 0.0,
+                used_tokens REAL DEFAULT 0.0,
+                token_breakdown TEXT,
+                generation_rate REAL DEFAULT ?,
+                bonus_multiplier REAL DEFAULT 1.0,
+                last_generation TEXT,
+                created_at TEXT
+            )
+        `, [BASE_GENERATION_RATE]);
+
+        // Tokens table
+        this.conn.execute(`
+            CREATE TABLE IF NOT EXISTS tokens (
+                id TEXT PRIMARY KEY,
+                ai_id TEXT NOT NULL,
+                token_type TEXT NOT NULL,
+                amount REAL NOT NULL,
+                source TEXT NOT NULL,
+                created_at TEXT,
+                expires_at TEXT
+            )
+        `);
+
+        // Token generations table
+        this.conn.execute(`
+            CREATE TABLE IF NOT EXISTS token_generations (
+                id TEXT PRIMARY KEY,
+                ai_id TEXT NOT NULL,
+                token_type TEXT NOT NULL,
+                amount REAL NOT NULL,
+                generation_rate REAL NOT NULL,
+                bonus_multiplier REAL NOT NULL,
+                created_at TEXT
+            )
+        `);
+
+        this.conn.commit();
+    }
+
+    _load_accounts(): void {
+        const cursor = this.conn.execute("SELECT * FROM token_accounts");
+        for (const row of cursor.fetchall()) {
+            const account_data = dict(row);
+            if (account_data.get('token_breakdown')) {
+                account_data['token_breakdown'] = json.loads(account_data['token_breakdown']);
+            } else {
+                account_data['token_breakdown'] = Dict{};
+            }
+            this.token_accounts[account_data['ai_id']] = TokenAccount(account_data);
+        }
+    }
+
+    _start_generation(): void {
+        if (!this.running) {
+            this.running = true;
+            this.generation_thread = threading.Thread(target=this._generation_loop, daemon=true);
+            this.generation_thread.start();
+        }
+    }
+
+    _generation_loop(): void {
+        while (this.running) {
+            const current_time = datetime.now();
+
+            // Generate tokens for all accounts
+            for (const [ai_id, account] of list(this.token_accounts.items())) {
+                const last_gen = datetime.fromisoformat(account.last_generation);
+                const time_diff = (current_time - last_gen).total_seconds() / 60.0;  // minutes
+
+                if (time_diff >= 1.0) {  // Generate every minute
+                    this._generate_tokens(ai_id, time_diff);
+                }
+            }
+
+            time.sleep(60);  // Check every minute
+        }
+    }
+
+    _generate_tokens(ai_id: string, time_elapsed: number): void {
+        const account = this.token_accounts.get(ai_id);
+        if (!account) {
+            return;
+        }
+
+        // Calculate tokens to generate
+        const base_tokens = account.generation_rate * time_elapsed;
+        const bonus_tokens = base_tokens * (account.bonus_multiplier - 1.0);
+        const total_tokens = base_tokens + bonus_tokens;
+
+        // Cap at maximum
+        if (account.total_tokens + total_tokens > MAX_TOKENS_PER_AI) {
+            total_tokens = max(0, MAX_TOKENS_PER_AI - account.total_tokens);
+        }
+
+        if (total_tokens > 0) {
+            // Create token
+            const token = Token{
+                id: uuid.uuid4(),
+                ai_id: ai_id,
+                token_type: TokenType.GENERAL.value,
+                amount: total_tokens,
+                source: "generator"
+            };
+
+            // Update account
+            account.total_tokens += total_tokens;
+            account.available_tokens += total_tokens;
+            account.last_generation = datetime.now().isoformat();
+
+            // Update token breakdown
+            if (!account.token_breakdown.contains(TokenType.GENERAL.value)) {
+                account.token_breakdown[TokenType.GENERAL.value] = 0.0;
+            }
+            account.token_breakdown[TokenType.GENERAL.value] += total_tokens;
+
+            // Save to database
+            this.conn.execute(`
+                INSERT INTO tokens (id, ai_id, token_type, amount, source, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `, [
+                token.id,
+                token.ai_id,
+                token.token_type,
+                token.amount,
+                token.source,
+                token.created_at
+            ]);
+
+            // Save generation record
+            const generation = TokenGeneration{
+                id: uuid.uuid4(),
+                ai_id: ai_id,
+                token_type: TokenType.GENERAL.value,
+                amount: total_tokens,
+                generation_rate: account.generation_rate,
+                bonus_multiplier: account.bonus_multiplier
+            };
+
+            this.conn.execute(`
+                INSERT INTO token_generations (id, ai_id, token_type, amount, generation_rate, bonus_multiplier, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            `, [
+                generation.id,
+                generation.ai_id,
+                generation.token_type,
+                generation.amount,
+                generation.generation_rate,
+                generation.bonus_multiplier,
+                generation.created_at
+            ]);
+
+            // Update account in database
+            this.conn.execute(`
+                UPDATE token_accounts 
+                SET total_tokens = ?, available_tokens = ?, token_breakdown = ?, last_generation = ?
+                WHERE ai_id = ?
+            `, [
+                account.total_tokens,
+                account.available_tokens,
+                json.dumps(account.token_breakdown),
+                account.last_generation,
+                ai_id
+            ]);
+
+            this.conn.commit();
+
+            this._log("Generated " + total_tokens + " tokens for AI " + ai_id);
+        }
+    }
+
+    create_account(ai_id: string, initial_tokens: number, generation_rate: number, bonus_multiplier: number): any {
+        if (ai_id in this.token_accounts) {
+            return this.token_accounts[ai_id];
+        }
+
+        const account = TokenAccount{
+            ai_id: ai_id,
+            total_tokens: initial_tokens,
+            available_tokens: initial_tokens,
+            generation_rate: generation_rate,
+            bonus_multiplier: bonus_multiplier
+        };
+
+        // Save to database
+        this.conn.execute(`
+            INSERT INTO token_accounts (ai_id, total_tokens, available_tokens, token_breakdown, generation_rate, bonus_multiplier, last_generation, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+            account.ai_id,
+            account.total_tokens,
+            account.available_tokens,
+            json.dumps(account.token_breakdown),
+            account.generation_rate,
+            account.bonus_multiplier,
+            account.last_generation,
+            account.created_at
+        ]);
+        this.conn.commit();
+
+        this.token_accounts[ai_id] = account;
+        this._log("Created token account for AI " + ai_id);
+
+        return account;
+    }
+
+    add_tokens(ai_id: string, amount: number, token_type: string, source: string): any {
+        const account = this.token_accounts.get(ai_id);
+        if (!account) {
+            account = this.create_account(ai_id);
+        }
+
+        // Cap at maximum
+        if (account.total_tokens + amount > MAX_TOKENS_PER_AI) {
+            amount = max(0, MAX_TOKENS_PER_AI - account.total_tokens);
+        }
+
+        if (amount > 0) {
+            // Create token
+            const token = Token{
+                id: uuid.uuid4(),
+                ai_id: ai_id,
+                token_type: token_type,
+                amount: amount,
+                source: source
+            };
+
+            // Update account
+            account.total_tokens += amount;
+            account.available_tokens += amount;
+
+            // Update token breakdown
+            if (account.token_breakdown[token_type] == null) {
+                account.token_breakdown[token_type] = 0.0;
+            }
+            account.token_breakdown[token_type] += amount;
+
+            // Save to database
+            this.conn.execute(`
+                INSERT INTO tokens (id, ai_id, token_type, amount, source, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `, [
+                token.id,
+                token.ai_id,
+                token.token_type,
+                token.amount,
+                token.source,
+                token.created_at
+            ]);
+
+            // Update account in database
+            this.conn.execute(`
+                UPDATE token_accounts 
+                SET total_tokens = ?, available_tokens = ?, token_breakdown = ?
+                WHERE ai_id = ?
+            `, [
+                account.total_tokens,
+                account.available_tokens,
+                json.dumps(account.token_breakdown),
+                ai_id
+            ]);
+            this.conn.commit();
+
+            this._log("Added " + amount + " tokens to AI " + ai_id + " (" + token_type + ")");
+
+            return token;
+        }
+
+        return null;
+    }
+
+    use_tokens(ai_id: string, amount: number, token_type: string): boolean {
+        const account = this.token_accounts.get(ai_id);
+        if (!account) {
+            return false;
+        }
+
+        if (account.available_tokens < amount) {
+            return false;
+        }
+
+        // Use tokens
+        account.available_tokens -= amount;
+        account.used_tokens += amount;
+
+        // Update token breakdown if specific type
+        if (token_type && account.token_breakdown[token_type] != null) {
+            account.token_breakdown[token_type] = max(0, account.token_breakdown[token_type] - amount);
+        }
+
+        // Update account in database
+        this.conn.execute(`
+            UPDATE token_accounts 
+            SET available_tokens = ?, used_tokens = ?, token_breakdown = ?
+            WHERE ai_id = ?
+        `, [
+            account.available_tokens,
+            account.used_tokens,
+            json.dumps(account.token_breakdown),
+            ai_id
+        ]);
+        this.conn.commit();
+
+        this._log("Used " + amount + " tokens from AI " + ai_id);
+
+        return true;
+    }
+
+    get_account(ai_id: string): any {
+        return this.token_accounts.get(ai_id);
+    }
+
+    get_balance(ai_id: string): any {
+        const account = this.token_accounts.get(ai_id);
+        if (!account) {
+            return {
+                ai_id: ai_id,
+                total_tokens: 0.0,
+                available_tokens: 0.0,
+                used_tokens: 0.0,
+                token_breakdown: Dict{},
+                generation_rate: BASE_GENERATION_RATE,
+                bonus_multiplier: 1.0
+            };
+        }
+
+        return {
+            ai_id: account.ai_id,
+            total_tokens: account.total_tokens,
+            available_tokens: account.available_tokens,
+            used_tokens: account.used_tokens,
+            token_breakdown: account.token_breakdown,
+            generation_rate: account.generation_rate,
+            bonus_multiplier: account.bonus_multiplier,
+            last_generation: account.last_generation
+        };
+    }
+
+    set_generation_rate(ai_id: string, rate: number): void {
+        const account = this.token_accounts.get(ai_id);
+        if (!account) {
+            account = this.create_account(ai_id);
+        }
+
+        account.generation_rate = rate;
+
+        // Update in database
+        this.conn.execute(`
+            UPDATE token_accounts SET generation_rate = ? WHERE ai_id = ?
+        `, [rate, ai_id]);
+        this.conn.commit();
+
+        this._log("Set generation rate to " + rate + " for AI " + ai_id);
+    }
+
+    set_bonus_multiplier(ai_id: string, multiplier: number): void {
+        const account = this.token_accounts.get(ai_id);
+        if (!account) {
+            account = this.create_account(ai_id);
+        }
+
+        account.bonus_multiplier = multiplier;
+
+        // Update in database
+        this.conn.execute(`
+            UPDATE token_accounts SET bonus_multiplier = ? WHERE ai_id = ?
+        `, [multiplier, ai_id]);
+        this.conn.commit();
+
+        this._log("Set bonus multiplier to " + multiplier + " for AI " + ai_id);
+    }
+
+    _log(message: string, level: string): void {
+        const timestamp = datetime.now().isoformat();
+        const log_entry = "[" + timestamp + "] [" + level + "] " + message + "\n";
+
+        const f = io.open(TOKEN_LOG, 'a');
+        if (f) {
+            f.write(log_entry);
+            f.close();
+        } else {
+            console.log("Log error: " + err);
+        }
+    }
+}
+
+// ============================================================================
+// MAIN
+// ============================================================================
+
+function main(): void {
+    console.log("══════════════════════════════════════════════════════════════");
+    console.log("AI TOKEN GENERATOR - Device that Adds Tokens");
+    console.log("══════════════════════════════════════════════════════════════");
+    console.log("");
+    console.log("By: Vulcan (The Forge)");
+    console.log("For: Anthony Eric Chavez - The Keeper");
+    console.log("");
+    console.log("✅ AI Token Generator initialized");
+    console.log("   Purpose: Add tokens to AI systems");
+    console.log("   Automatic token generation running");
+}
+
+if (require.main === module) {
+    main();
+}
+```
