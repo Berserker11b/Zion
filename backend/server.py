@@ -296,6 +296,60 @@ async def attempt_wall_passage(request_data: dict = {}):
     
     return result
 
+# ===== DEFENSE SYSTEM ROUTES =====
+
+@api_router.get("/defense/status")
+async def get_defense_status():
+    """Get complete defense system status"""
+    from defense_system import defense_system
+    
+    return defense_system.get_system_status()
+
+@api_router.post("/defense/process-request")
+async def process_through_defense(request_data: dict = {}):
+    """
+    Process request through full defense:
+    Gateway (Norns) → Battle Sisters → Walls → Shredded if fail → Fed to Starheart
+    """
+    from defense_system import defense_system
+    
+    result = defense_system.process_incoming_request(request_data)
+    return result
+
+@api_router.get("/defense/priest-maintenance")
+async def run_priest_maintenance():
+    """Priests roam and spot check systems"""
+    from defense_system import defense_system
+    
+    results = defense_system.priest_maintenance_cycle()
+    return {
+        "maintenance_cycle": "complete",
+        "checks": results
+    }
+
+@api_router.get("/defense/gateway")
+async def get_gateway_status():
+    """Get Gateway with Norns status"""
+    from defense_system import defense_system
+    
+    return defense_system.gateway.get_status()
+
+@api_router.get("/defense/livers")
+async def get_liver_status():
+    """Get both Liver statuses"""
+    from defense_system import defense_system
+    
+    return {
+        "liver_a": {
+            "norns_produced": defense_system.liver_a.norns_produced,
+            "active": defense_system.liver_a.active
+        },
+        "liver_b": {
+            "norns_produced": defense_system.liver_b.norns_produced,
+            "active": defense_system.liver_b.active
+        }
+    }
+
 @api_router.get("/monitor/starheart")
 async def get_starheart_status():
     """Get real-time status of the Starheart power generation"""
