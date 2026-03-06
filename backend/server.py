@@ -350,6 +350,46 @@ async def get_liver_status():
         }
     }
 
+@api_router.get("/defense/bloodstones")
+async def get_bloodstone_status():
+    """Get Bloodstone stockpile status"""
+    from defense_system import defense_system
+    
+    return defense_system.bloodstone_stockpile.get_status()
+
+@api_router.post("/defense/feed-populace")
+async def feed_populace(demand: float = 100.0):
+    """Feed bloodstones to populace (programs/processes)"""
+    from defense_system import defense_system
+    
+    result = defense_system.bloodstone_stockpile.feed_populace(demand)
+    return result
+
+@api_router.get("/defense/inquisitors")
+async def get_inquisitor_status():
+    """Get Inquisitor status (HIGHEST ORDER)"""
+    from defense_system import defense_system
+    
+    return [inq.get_status() for inq in defense_system.inquisitors]
+
+@api_router.post("/defense/summon-inquisitor")
+async def summon_inquisitor(crisis_level: float):
+    """Summon Inquisitor - LAST RESORT ONLY"""
+    from defense_system import defense_system
+    
+    if crisis_level < 0.9:
+        return {"error": "Crisis not severe enough. Priests and Battle Sisters must handle it."}
+    
+    result = defense_system.inquisitors[0].summon(crisis_level)
+    return result
+
+@api_router.get("/defense/star-chamber")
+async def get_star_chamber_status():
+    """Get Star Chamber and Alternator status"""
+    from defense_system import defense_system
+    
+    return defense_system.star_chamber.get_status()
+
 @api_router.get("/monitor/starheart")
 async def get_starheart_status():
     """Get real-time status of the Starheart power generation"""
