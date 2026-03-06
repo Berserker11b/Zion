@@ -201,6 +201,7 @@ class CyberWorms:
         self.feeder_worms = 0
         self.compressor_worms = 0
         self.total_worms = 10  # Start with 10 worms
+        self.patterns_learned = []  # Patterns found in data - priests search this
     
     def split_worms(self, starheart_active: bool):
         """Split worms based on Starheart status"""
