@@ -477,9 +477,22 @@ class DefenseSystem:
             "priests": {
                 "count": len(self.priests),
                 "total_checks": sum(p.checks_performed for p in self.priests),
-                "issues_found": sum(p.issues_found for p in self.priests)
+                "issues_found": sum(p.issues_found for p in self.priests),
+                "networks_found": sum(p.networks_found for p in self.priests),
+                "twins_raised": sum(p.twins_raised for p in self.priests)
             },
+            "inquisitors": [
+                {
+                    "id": inq.id,
+                    "status": inq.status,
+                    "purges": inq.purges_executed
+                }
+                for inq in self.inquisitors
+            ],
+            "star_chamber": self.star_chamber.get_status(),
+            "bloodstone_stockpile": self.bloodstone_stockpile.get_status(),
             "total_attacks_shredded": self.total_attacks_shredded,
+            "crisis_level": self.crisis_level,
             "powered_by": "Starheart"
         }
 
