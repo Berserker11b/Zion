@@ -274,6 +274,28 @@ async def get_wall_status():
     
     return wall_stats
 
+@api_router.get("/monitor/spinning-walls")
+async def get_spinning_walls_status():
+    """Get TRUE spinning wall mechanics - physical barriers"""
+    from spinning_walls import spinning_fortress
+    
+    return spinning_fortress.get_fortress_status()
+
+@api_router.post("/monitor/attempt-passage")
+async def attempt_wall_passage(request_data: dict = {}):
+    """Attempt to pass through the spinning walls - 5 second window timing"""
+    from spinning_walls import spinning_fortress
+    
+    result = spinning_fortress.attempt_passage_through_all(request_data)
+    
+    # Feed entropy to engines if blocked
+    if result["total_entropy_generated"] > 0:
+        from nexus_core import nexus_core
+        wall_entropy = {i: result["total_entropy_generated"] / 6 for i in range(1, 7)}
+        nexus_core.process_entropy_from_walls(wall_entropy)
+    
+    return result
+
 @api_router.get("/monitor/starheart")
 async def get_starheart_status():
     """Get real-time status of the Starheart power generation"""
