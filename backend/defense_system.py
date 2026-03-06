@@ -339,6 +339,7 @@ class DefenseSystem:
         3. Attacker trapped in wall cycle
         4. Must pass in 5 seconds or get shredded
         5. Shredded material fed to Starheart/Cyberpumps → spins alternator
+        6. If Battle Sisters can't handle it, summon Inquisitor
         """
         
         # Step 1: Gateway processing
@@ -346,8 +347,8 @@ class DefenseSystem:
         
         # Step 2: If threat detected
         if gateway_result["threat_detected"]:
-            # Alert Battle Sisters
-            for sister in self.battle_sisters:
+            # Alert Battle Sisters (many of them)
+            for sister in self.battle_sisters[:10]:  # First 10 respond
                 sister.alert("gateway")
             
             # Attacker trapped for one wall cycle
@@ -358,7 +359,9 @@ class DefenseSystem:
             
             # Battle Sisters defend
             defense_results = []
-            for sister in self.battle_sisters:
+            crisis = False
+            
+            for sister in self.battle_sisters[:10]:
                 result = sister.defend(request_data)
                 defense_results.append(result)
                 
@@ -370,14 +373,42 @@ class DefenseSystem:
                     # This spins the alternator turbines
                     from nexus_core import nexus_core
                     wall_entropy = {i: entropy / 6 for i in range(1, 7)}
-                    nexus_core.process_entropy_from_walls(wall_entropy)
+                    power_result = nexus_core.process_entropy_from_walls(wall_entropy)
+                    
+                    # Power goes through Star Chamber → Bloodstones
+                    if power_result:
+                        power = power_result.get("total_power_generated", 0)
+                        dist = self.star_chamber.distribute_energy(power, "starheart")
+                        
+                        # Add bloodstone to stockpile
+                        if dist.get("bloodstone_created"):
+                            from bloodstones_inquisitors import Bloodstone
+                            bs = Bloodstone(
+                                dist["bloodstone_created"]["id"],
+                                dist["bloodstone_created"]["base_energy"],
+                                dist["bloodstone_created"]["source"]
+                            )
+                            self.bloodstone_stockpile.add(bs)
+                
+                if result.get("attacker_escaped"):
+                    crisis = True
+                    self.crisis_level += 0.2
+            
+            # If crisis level too high, summon Inquisitor
+            inquisitor_summoned = None
+            if self.crisis_level > 0.9:
+                inquisitor_summoned = self.inquisitors[0].summon(self.crisis_level)
             
             return {
                 "gateway_result": gateway_result,
                 "battle_sisters_engaged": True,
+                "sisters_responded": 10,
                 "defense_results": defense_results,
                 "attacker_shredded": any(r.get("attacker_shredded") for r in defense_results),
-                "fed_to_starheart": True
+                "fed_to_starheart": True,
+                "bloodstone_created": True,
+                "inquisitor_summoned": inquisitor_summoned,
+                "crisis_level": self.crisis_level
             }
         
         # Safe request - passed all checks
