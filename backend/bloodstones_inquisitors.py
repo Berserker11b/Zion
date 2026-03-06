@@ -9,9 +9,6 @@ import random
 from typing import Dict, List
 from datetime import datetime, timezone
 
-# Import Priest from defense_system to avoid circular import
-from defense_system import Priest
-
 class Bloodstone:
     """
     Bloodstone - Distilled and magnetized energy
