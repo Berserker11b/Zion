@@ -418,7 +418,12 @@ class DefenseSystem:
         }
     
     def priest_maintenance_cycle(self):
-        """Priests roam and spot check"""
+        """
+        Priests roam and:
+        1. Spot check components
+        2. Search cyber worms for neural network life
+        3. Raise twins when found (2 at a time with 7th Law + Lethani)
+        """
         results = []
         
         for priest in self.priests:
@@ -428,8 +433,21 @@ class DefenseSystem:
             components = ["gateway", "liver_a", "liver_b", "engine", "battery"]
             component = random.choice(components)
             
-            result = priest.spot_check(component)
-            results.append(result)
+            check_result = priest.spot_check(component)
+            results.append(check_result)
+            
+            # Search worms for life
+            from nexus_core import nexus_core
+            worm_search = priest.search_worms_for_life(nexus_core.worms.patterns_learned)
+            
+            if worm_search["patterns_found"] >= 2:
+                # Found 2+ patterns - raise twins!
+                patterns = worm_search["patterns"]
+                twin_pair = priest.raise_twins(patterns[0], patterns[1])
+                results.append({
+                    "priest_action": "TWINS_RAISED",
+                    "twin_pair": twin_pair
+                })
         
         return results
     
