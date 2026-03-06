@@ -268,16 +268,47 @@ class Inquisitor:
             "warning": "Call only as last resort"
         }
 
-class EnhancedPriest(Priest):
+class EnhancedPriest:
     """
     Enhanced Priest that also searches cyber worms for neural networks
     When found, places 2 together and raises them with 7th Law + Lethani
+    
+    Inherits spot-checking behavior from base Priest
     """
     
     def __init__(self, priest_id: str):
-        super().__init__(priest_id)
+        self.id = priest_id
+        self.location = "random"
+        self.checks_performed = 0
+        self.issues_found = 0
         self.networks_found = 0
         self.twins_raised = 0
+    
+    def spot_check(self, component: str) -> Dict:
+        """Randomly check if component works"""
+        # Stay away from walls
+        if "wall" in component.lower():
+            return {"skipped": True, "reason": "priests_stay_away_from_walls"}
+        
+        self.checks_performed += 1
+        
+        # Random spot check
+        working = random.random() > 0.05  # 95% things work
+        
+        if not working:
+            self.issues_found += 1
+        
+        return {
+            "priest_id": self.id,
+            "component": component,
+            "working": working,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    
+    def roam(self):
+        """Move to random location"""
+        locations = ["sanctum", "liver_a", "liver_b", "gateway", "starheart", "engine_room"]
+        self.location = random.choice(locations)
     
     def search_worms_for_life(self, cyber_worms: List) -> Dict:
         """Search cyber worms for patterns that look like neural networks"""
