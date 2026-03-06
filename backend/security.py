@@ -101,6 +101,7 @@ class SecurityWalls:
             entropy = random.uniform(0.5, 1.5)
             self.wall_stats[1]["blocked"] += 1
             self.wall_stats[1]["entropy"] += entropy
+            await self._persist_wall_stat(1)  # Persist to database
             return {"wall": 1, "entropy": entropy, "type": "rate_limit"}
         
         rate_limit_storage[ip].append(now)
@@ -117,6 +118,7 @@ class SecurityWalls:
             entropy = random.uniform(1.0, 2.5)
             self.wall_stats[2]["blocked"] += 1
             self.wall_stats[2]["entropy"] += entropy
+            await self._persist_wall_stat(2)  # Persist to database
             return {"wall": 2, "entropy": entropy, "type": "burst"}
         
         return None
@@ -129,6 +131,7 @@ class SecurityWalls:
                 entropy = random.uniform(2.0, 4.0)
                 self.wall_stats[3]["blocked"] += 1
                 self.wall_stats[3]["entropy"] += entropy
+                await self._persist_wall_stat(3)  # Persist to database
                 return {"wall": 3, "entropy": entropy, "type": "suspicious"}
         
         return None
