@@ -198,3 +198,11 @@ class SecurityWalls:
 
 # Global security instance
 security_walls = SecurityWalls()
+
+# Load wall stats on module import
+import asyncio
+try:
+    asyncio.create_task(security_walls._load_wall_stats())
+except RuntimeError:
+    # Not in async context yet, will load later
+    pass
