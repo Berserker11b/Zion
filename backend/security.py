@@ -24,6 +24,42 @@ class SecurityWalls:
     
     def __init__(self):
         self.wall_stats = {i: {"blocked": 0, "entropy": 0.0} for i in range(1, 7)}
+        self.db = None
+    
+    def _get_db(self):
+        """Lazy load database"""
+        if self.db is None:
+            from motor.motor_asyncio import AsyncIOMotorClient
+            import os
+            mongo_url = os.environ['MONGO_URL']
+            db_name = os.environ['DB_NAME']
+            client = AsyncIOMotorClient(mongo_url)
+            self.db = client[db_name]
+        return self.db
+    
+    async def _load_wall_stats(self):
+        """Load wall stats from database on startup"""
+        db = self._get_db()
+        for wall_num in range(1, 7):
+            stat = await db.wall_stats.find_one({"wall_number": wall_num})
+            if stat:
+                self.wall_stats[wall_num] = {
+                    "blocked": stat.get("blocked", 0),
+                    "entropy": stat.get("entropy", 0.0)
+                }
+    
+    async def _persist_wall_stat(self, wall_num: int):
+        """Persist wall stat to database"""
+        db = self._get_db()
+        await db.wall_stats.update_one(
+            {"wall_number": wall_num},
+            {"$set": {
+                "blocked": self.wall_stats[wall_num]["blocked"],
+                "entropy": self.wall_stats[wall_num]["entropy"],
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }},
+            upsert=True
+        )
     
     async def check_walls(self, request: Request, db):
         """Process request through the six walls"""
