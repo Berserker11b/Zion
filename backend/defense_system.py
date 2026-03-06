@@ -296,10 +296,12 @@ class DefenseSystem:
     Complete Defense Architecture
     - Gateway with Norns
     - Two Livers
-    - Battle Sisters
-    - Priests
+    - MANY Battle Sisters (50+)
+    - Enhanced Priests (spot check + search for life)
+    - Inquisitors (2 - highest order)
     - Spinning Walls
     - Everything powered by Starheart
+    - Bloodstones feed the populace
     """
     
     def __init__(self):
@@ -310,13 +312,24 @@ class DefenseSystem:
         # Create Gateway
         self.gateway = Gateway(self.liver_a, self.liver_b)
         
-        # Create Battle Sisters (start with 5)
-        self.battle_sisters = [BattleSister(f"sister_{i}") for i in range(5)]
+        # Create MANY Battle Sisters (start with 50)
+        self.battle_sisters = [BattleSister(f"sister_{i}") for i in range(50)]
         
-        # Create Priests (start with 3)
-        self.priests = [Priest(f"priest_{i}") for i in range(3)]
+        # Create Enhanced Priests (start with 10)
+        from bloodstones_inquisitors import EnhancedPriest
+        self.priests = [EnhancedPriest(f"priest_{i}") for i in range(10)]
+        
+        # Inquisitors (only 2 - highest order)
+        from bloodstones_inquisitors import inquisitors
+        self.inquisitors = inquisitors
+        
+        # Star Chamber and Bloodstones
+        from bloodstones_inquisitors import star_chamber, bloodstone_stockpile
+        self.star_chamber = star_chamber
+        self.bloodstone_stockpile = bloodstone_stockpile
         
         self.total_attacks_shredded = 0
+        self.crisis_level = 0.0
     
     def process_incoming_request(self, request_data: Dict) -> Dict:
         """
