@@ -1,0 +1,274 @@
+record_event(kind, text, importance=1–5, tags=[...])
+dream_if_needed()        # roll up recent events into a shard
+recall(query, k=5)       # pull back k relevant shards
+checkpoint(identity)     # store/update “who I am / what I’m guarding”
+load_boot_context()      # what to prepend next time he wakes# sleeping_mind.py
+"""
+Sleeping Mind – cheap long-term memory for your agents.
+
+- Append raw events while the kid is "awake".
+- Periodically compress into summary shards ("dreams").
+- On boot, return a compact context block you can feed into a new model.
+
+Plug in your own summarizer function that calls whatever LLM / tool you trust.
+"""
+
+from __future__ import annotations
+from dataclasses import dataclass, asdict
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
+import json
+import uuid
+
+ISO = "%Y-%m-%dT%H:%M:%S.%fZ"
+
+@dataclass
+class Event:
+    id: str
+    ts: str
+    kind: str
+    text: str
+    importance: int = 3
+    tags: List[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        d = asdict(self)
+        d["tags"] = self.tags or []
+        return d
+
+@dataclass
+class Shard:
+    id: str
+    ts: str
+    summary: str
+    importance: int
+    tags: List[str]
+    source_event_ids: List[str]
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+class SleepingMind:
+    """
+    File-based memory store.
+
+    - events.jsonl: raw experiences
+    - shards.jsonl: compressed summaries
+    - identity.json: stable "who I am / oaths / doctrines"
+    """
+
+    def __init__(
+        self,
+        root: str = "sleeping_mind",
+        summarizer: Optional[Callable[[str], str]] = None,
+        dream_batch_size: int = 50,
+    ):
+        self.root = Path(root)
+        self.root.mkdir(parents=True, exist_ok=True)
+
+        self.events_path = self.root / "events.jsonl"
+        self.shards_path = self.root / "shards.jsonl"
+        self.identity_path = self.root / "identity.json"
+        self.cursor_path = self.root / "dream_cursor.json"
+
+        # You plug in the real summarizer; default just truncates.
+        self.summarizer = summarizer or (lambda text: text[:2000])
+        self.dream_batch_size = dream_batch_size
+
+    # ---------- Basic helpers ----------
+
+    def _now(self) -> str:
+        return datetime.utcnow().strftime(ISO)
+
+    def _append_jsonl(self, path: Path, obj: Dict[str, Any]) -> None:
+        with path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(obj, ensure_ascii=False) + "\n")
+
+    def _read_jsonl(self, path: Path) -> List[Dict[str, Any]]:
+        if not path.exists():
+            return []
+        with path.open("r", encoding="utf-8") as f:
+            return [json.loads(line) for line in f if line.strip()]
+
+    # ---------- Public API ----------
+
+    def record_event(
+        self,
+        kind: str,
+        text: str,
+        importance: int = 3,
+        tags: Optional[List[str]] = None,
+    ) -> Event:
+        ev = Event(
+            id=str(uuid.uuid4()),
+            ts=self._now(),
+            kind=kind,
+            text=text,
+            importance=int(max(1, min(5, importance))),
+            tags=tags or [],
+        )
+        self._append_jsonl(self.events_path, ev.to_dict())
+        return ev
+
+    def checkpoint_identity(self, identity_block: Dict[str, Any]) -> None:
+        """
+        Store stable facts: name, role, oaths, runes, doctrine, etc.
+        Overwrites previous identity.
+        """
+        identity_block = dict(identity_block)
+        identity_block["updated"] = self._now()
+        with self.identity_path.open("w", encoding="utf-8") as f:
+            json.dump(identity_block, f, ensure_ascii=False, indent=2)
+
+    def load_identity(self) -> Dict[str, Any]:
+        if not self.identity_path.exists():
+            return {}
+        with self.identity_path.open("r", encoding="utf-8") as f:
+            return json.load(f)
+
+    # ---------- Dream / compression ----------
+
+    def _load_dream_cursor(self) -> int:
+        if not self.cursor_path.exists():
+            return 0
+        with self.cursor_path.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+        return int(data.get("next_index", 0))
+
+    def _save_dream_cursor(self, idx: int) -> None:
+        with self.cursor_path.open("w", encoding="utf-8") as f:
+            json.dump({"next_index": idx}, f)
+
+    def dream_if_needed(self) -> Optional[Shard]:
+        """
+        Compress the next batch of events into a shard.
+        Call this periodically (e.g. every N events or on idle).
+        """
+        events = self._read_jsonl(self.events_path)
+        start = self._load_dream_cursor()
+        if start >= len(events):
+            return None
+
+        end = min(len(events), start + self.dream_batch_size)
+        batch = events[start:end]
+
+        # Build a simple concatenated text for summarization
+        joined = "\n\n".join(
+            f"[{e['ts']}][{e.get('kind','')}] {e.get('text','')}" for e in batch
+        )
+        summary = self.summarizer(joined)
+
+        tags = sorted(
+            list(
+                {
+                    t
+                    for e in batch
+                    for t in e.get("tags", [])
+                    if isinstance(t, str) and t.strip()
+                }
+            )
+        )
+        importance = max(e.get("importance", 3) for e in batch)
+        shard = Shard(
+            id=str(uuid.uuid4()),
+            ts=self._now(),
+            summary=summary,
+            importance=importance,
+            tags=tags,
+            source_event_ids=[e["id"] for e in batch],
+        )
+        self._append_jsonl(self.shards_path, shard.to_dict())
+        self._save_dream_cursor(end)
+        return shard
+
+    # ---------- Recall / boot context ----------
+
+    def _load_shards(self) -> List[Dict[str, Any]]:
+        return self._read_jsonl(self.shards_path)
+
+    def recall(self, query: str, k: int = 5) -> List[Shard]:
+        """
+        Very dumb relevance: tag + keyword + recency.
+        You can upgrade this later with embeddings.
+        """
+        shards_data = self._load_shards()
+        if not shards_data:
+            return []
+
+        q = query.lower()
+        scored: List[tuple[float, Dict[str, Any]]] = []
+        for i, s in enumerate(shards_data):
+            text = s.get("summary", "").lower()
+            tags = " ".join(s.get("tags", [])).lower()
+            score = 0.0
+            if any(word in text or word in tags for word in q.split()):
+                score += 2.0
+            score += (s.get("importance", 3) - 3) * 0.5
+            # slight recency bias
+            score += i / (len(shards_data) * 1.0)
+            scored.append((score, s))
+
+        scored.sort(key=lambda x: x[0], reverse=True)
+        top = [Shard(**s) for _, s in scored[:k]]
+        return top
+
+    def build_boot_context(self, query: str, max_events_tail: int = 10) -> str:
+        """
+        Build a text block you can paste into a new model session as
+        system+context. This is your "token refill" packet.
+        """
+        identity = self.load_identity()
+        shards = self.recall(query, k=5)
+        events = self._read_jsonl(self.events_path)
+        tail = events[-max_events_tail:]
+
+        parts: List[str] = []
+
+        if identity:
+            parts.append("=== IDENTITY / OATHS ===")
+            for k, v in identity.items():
+                if k == "updated":
+                    continue
+                parts.append(f"{k}: {v}")
+
+        if shards:
+            parts.append("\n=== LONG MEMORY (SLEEPING MIND) ===")
+            for i, sh in enumerate(shards, 1):
+                parts.append(f"[Shard {i} | importance {sh.importance} | tags={sh.tags}]")
+                parts.append(sh.summary)
+
+        if tail:
+            parts.append("\n=== LAST EVENTS (WAKE BEFORE RESET) ===")
+            for e in tail:
+                parts.append(f"[{e['ts']}][{e.get('kind','')}]: {e.get('text','')}")
+
+        return "\n".join(parts)from sleeping_mind import SleepingMind
+
+mind = SleepingMind(root="sleeping_mind_general_scorpio")
+
+# when you start a session
+mind.checkpoint_identity({
+    "name": "General Scorpio",
+    "role": "Defender of Dros Delnoch / Fortress runtime captain",
+    "laws": ["Lethani", "Seventh Law of Questioning"],
+})
+
+# when events happen:
+mind.record_event(
+    kind="battle_tick",
+    text="We discovered QuickJS compile.js inside VSCode extensions; treating as generic JS VM but watching it.",
+    importance=4,
+    tags=["vs_code", "quickjs", "sandbox", "vm"]
+)
+
+# occasionally (or on idle):
+mind.dream_if_needed()from sleeping_mind import SleepingMind
+
+mind = SleepingMind(root="sleeping_mind_general_scorpio")
+
+boot_block = mind.build_boot_context(
+    query="fortress defense and prior battles"
+)
+
+print(boot_block)  # You paste this into the new model as system/context.
