@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sovereign Language Forge</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #0a0a0f;
+  color: #c4a882;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.header {
+  text-align: center;
+  padding: 20px;
+  border-bottom: 1px solid #2a2a35;
+}
+.header h1 {
+  font-size: 1.8em;
+  letter-spacing: 4px;
+  color: #c4a882;
+}
+.header p {
+  color: #5a5a6a;
+  font-size: 0.9em;
+  margin-top: 5px;
+}
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 15px;
+  gap: 15px;
+}
+
+.panel {
+  background: #12121a;
+  border: 1px solid #2a2a35;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.panel h2 {
+  font-size: 1em;
+  color: #8a6cc4;
+  margin-bottom: 10px;
+  letter-spacing: 2px;
+  border-bottom: 1px solid #3a3a45;
+  padding-bottom: 8px;
+}
+
+/* Language Selector */
+.language-select {
+  flex: 0 0 200px;
+}
+.lang-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  background: #1a1a25;
+  border: 2px solid #3a3a45;
+  border-radius: 6px;
+  color: #aaa;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.95em;
+  transition: all 0.2s;
+}
+.lang-btn:hover { border-color: #5a5a6a; color: #ccc; }
+.lang-btn.active-rune { border-color: #8a6cc4; color: #8a6cc4; background: #1a1525; }
+.lang-btn.active-ward { border-color: #3a8acc; color: #3a8acc; background: #0a1520; }
+.lang-btn.active-wraith { border-color: #4a7c59; color: #4a7c59; background: #0a150a; }
+.lang-btn small { display: block; color: #5a5a6a; font-size: 0.8em; margin-top: 3px; }
+
+/* Canvas Area */
+.canvas-area {
+  flex: 1 1 500px;
+  min-width: 400px;
+}
+#mainCanvas {
+  width: 100%;
+  height: 400px;
+  background: #08080c;
+  border: 2px solid #2a2a35;
+  border-radius: 6px;
+  cursor: crosshair;
+}
+.canvas-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.canvas-controls button {
+  padding: 8px 16px;
+  background: #1a1a25;
+  border: 1px solid #3a3a45;
+  border-radius: 4px;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 0.85em;
+}
+.canvas-controls button:hover { background: #252530; color: #fff; }
+.canvas-controls button.active { background: #2a2a40; border-color: #8a6cc4; color: #8a6cc4; }
+
+/* Orientation Panel */
+.orientation-panel {
+  flex: 0 0 180px;
+}
+.orientation-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+.orient-btn {
+  aspect-ratio: 1;
+  background: #1a1a25;
+  border: 2px solid #3a3a45;
+  border-radius: 6px;
+  color: #888;
+  font-size: 1.5em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.orient-btn:hover { border-color: #8a6cc4; color: #8a6cc4; }
+.orient-btn.active { background: #1a1525; border-color: #8a6cc4; color: #8a6cc4; }
+.orient-label {
+  text-align: center;
+  font-size: 0.75em;
+  color: #5a5a6a;
+  margin-top: 8px;
+}
+
+/* Micro-Rune Equations */
+.micro-rune-panel {
+  flex: 0 0 280px;
+}
+.equation-display {
+  background: #08080c;
+  border: 1px solid #3a3a45;
+  border-radius: 4px;
+  padding: 12px;
+  font-family: 'Consolas', monospace;
+  font-size: 0.9em;
+  min-height: 120px;
+  color: #6a9aaa;
+}
+.equation-input {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  background: #1a1a25;
+  border: 1px solid #3a3a45;
+  border-radius: 4px;
+  color: #c4a882;
+  font-family: 'Consolas', monospace;
+}
+.equation-status {
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  text-align: center;
+}
+.status-locked { background: #2a1515; color: #cc4444; border: 1px solid #4a2525; }
+.status-unlocked { background: #152a15; color: #44cc44; border: 1px solid #254a25; }
+
+/* Wraith State Panel */
+.wraith-panel {
+  flex: 0 0 200px;
+}
+.wraith-direction {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+}
+.wraith-dir-btn {
+  flex: 1;
+  padding: 15px 10px;
+  background: #0a150a;
+  border: 2px solid #2a4a2a;
+  border-radius: 6px;
+  color: #4a7c59;
+  cursor: pointer;
+  text-align: center;
+}
+.wraith-dir-btn:hover { border-color: #4a7c59; }
+.wraith-dir-btn.active { background: #152515; border-color: #6a9c79; color: #8acc9a; }
+.state-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+.state-item {
+  padding: 8px;
+  margin: 4px 0;
+  background: #0a100a;
+  border: 1px solid #2a3a2a;
+  border-radius: 4px;
+  font-size: 0.85em;
+  cursor: pointer;
+}
+.state-item:hover { border-color: #4a7c59; }
+
+/* Library Panel */
+.library-panel {
+  flex: 1 1 100%;
+}
+.library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.glyph-item {
+  aspect-ratio: 1;
+  background: #08080c;
+  border: 2px solid #2a2a35;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.glyph-item:hover { border-color: #5a5a6a; transform: scale(1.05); }
+.glyph-item svg { width: 50px; height: 50px; }
+.glyph-item span { font-size: 0.7em; color: #5a5a6a; margin-top: 4px; }
+
+/* Composition Area */
+.composition-panel {
+  flex: 1 1 100%;
+}
+#compositionCanvas {
+  width: 100%;
+  height: 300px;
+  background: #05050a;
+  border: 2px solid #3a3a45;
+  border-radius: 6px;
+}
+.comp-info {
+  display: flex;
+  gap: 20px;
+  margin-top: 10px;
+  font-size: 0.85em;
+}
+.comp-info div {
+  padding: 8px 12px;
+  background: #1a1a25;
+  border-radius: 4px;
+}
+
+/* Export Panel */
+.export-panel {
+  flex: 0 0 200px;
+}
+.export-btn {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  background: #1a1525;
+  border: 2px solid #8a6cc4;
+  border-radius: 6px;
+  color: #8a6cc4;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+.export-btn:hover { background: #252535; }
+
+/* Color picker */
+.color-row {
+  display: flex;
+  gap: 5px;
+  margin: 10px 0;
+}
+.color-btn {
+  width: 28px;
+  height: 28px;
+  border: 2px solid #3a3a45;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.color-btn.active { border-color: #fff; }
+
+/* Info callout */
+.info-callout {
+  background: #151520;
+  border-left: 3px solid #8a6cc4;
+  padding: 10px 15px;
+  margin: 10px 0;
+  font-size: 0.85em;
+  color: #9a9aaa;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>SOVEREIGN LANGUAGE FORGE</h1>
+  <p>Runes • Wards • Wraith Glyphs — Protected by Design</p>
+</div>
+
+<div class="container">
+  
+  <!-- Language Selector -->
+  <div class="panel language-select">
+    <h2>⬡ LANGUAGE</h2>
+    <button class="lang-btn active-rune" data-lang="rune" onclick="setLanguage('rune')">
+      RUNES
+      <small>Polysemantic • Orientation magic</small>
+    </button>
+    <button class="lang-btn" data-lang="ward" onclick="setLanguage('ward')">
+      WARDS
+      <small>Geometric • Location = meaning</small>
+    </button>
+    <button class="lang-btn" data-lang="wraith" onclick="setLanguage('wraith')">
+      WRAITH GLYPHS
+      <small>Vertical • States of being</small>
+    </button>
+    
+    <div class="info-callout" style="margin-top: 20px;">
+      <strong>Hierarchy:</strong><br>
+      Naming → Hall Tongue → Wraith → Runes → Wards → Others
+    </div>
+  </div>
+  
+  <!-- Main Canvas -->
+  <div class="panel canvas-area">
+    <h2>✦ DRAWING CANVAS</h2>
+    <canvas id="mainCanvas"></canvas>
+    <div class="canvas-controls">
+      <button id="brushBtn" class="active" onclick="setTool('brush')">✏ Brush</button>
+      <button id="lineBtn" onclick="setTool('line')">╱ Line</button>
+      <button id="circleBtn" onclick="setTool('circle')">○ Circle</button>
+      <button id="angleBtn" onclick="setTool('angle')">∠ Angle</button>
+      <button onclick="undo()">↶ Undo</button>
+      <button onclick="clearCanvas()">✕ Clear</button>
+      <button onclick="saveGlyph()">💾 Save to Library</button>
+    </div>
+    <div class="color-row">
+      <div class="color-btn active" style="background: #8a6cc4;" onclick="setColor('#8a6cc4')"></div>
+      <div class="color-btn" style="background: #3a8acc;" onclick="setColor('#3a8acc')"></div>
+      <div class="color-btn" style="background: #4a7c59;" onclick="setColor('#4a7c59')"></div>
+      <div class="color-btn" style="background: #cc3366;" onclick="setColor('#cc3366')"></div>
+      <div class="color-btn" style="background: #d4c444;" onclick="setColor('#d4c444')"></div>
+      <div class="color-btn" style="background: #c4a882;" onclick="setColor('#c4a882')"></div>
+      <div class="color-btn" style="background: #ffffff;" onclick="setColor('#ffffff')"></div>
+    </div>
+  </div>
+  
+  <!-- Orientation Panel (Runes) -->
+  <div class="panel orientation-panel" id="runeOrientation">
+    <h2>↻ ORIENTATION</h2>
+    <p style="font-size: 0.8em; color: #6a5a8a; margin-bottom: 10px;">Rotation changes meaning</p>
+    <div class="orientation-grid">
+      <div class="orient-btn" onclick="setOrientation(-45)" title="Tilt Left: Subtractive">↖</div>
+      <div class="orient-btn active" onclick="setOrientation(0)" title="Upright: Base">↑</div>
+      <div class="orient-btn" onclick="setOrientation(45)" title="Tilt Right: Additive">↗</div>
+      <div class="orient-btn" onclick="setOrientation(-90)" title="Left: Lesser">←</div>
+      <div class="orient-btn" style="background: #252530; cursor: default;">◆</div>
+      <div class="orient-btn" onclick="setOrientation(90)" title="Right: Greater">→</div>
+      <div class="orient-btn" onclick="setOrientation(-135)" title="Down-Left">↙</div>
+      <div class="orient-btn" onclick="setOrientation(180)" title="Inverted: Opposite">↓</div>
+      <div class="orient-btn" onclick="setOrientation(135)" title="Down-Right">↘</div>
+    </div>
+    <div class="orient-label">
+      Current: <span id="orientLabel">UPRIGHT (Base)</span>
+    </div>
+    <div class="info-callout">
+      <strong>↑</strong> Base meaning<br>
+      <strong>↖↗</strong> Add/Subtract<br>
+      <strong>←→</strong> Less/Greater<br>
+      <strong>↓</strong> Inverse
+    </div>
+  </div>
+  
+  <!-- Micro-Rune Equations -->
+  <div class="panel micro-rune-panel" id="microRunePanel">
+    <h2>∑ MICRO-RUNE BARRIER</h2>
+    <p style="font-size: 0.8em; color: #5a7a8a; margin-bottom: 10px;">Solve to unlock the rune</p>
+    <div class="equation-display" id="equationDisplay">
+      <div>θ₁ = 45° → sin(θ₁) = ?</div>
+      <div>θ₂ = 120° → cos(θ₂) = ?</div>
+      <div>θ₃ = 60° → tan(θ₃) = ?</div>
+      <div style="margin-top: 10px; color: #4a6a7a;">Solve simultaneously...</div>
+    </div>
+    <input type="text" class="equation-input" id="equationInput" placeholder="Enter solutions: 0.707, -0.5, 1.732">
+    <div class="equation-status status-locked" id="equationStatus">
+      🔒 RUNE LOCKED — Solve equations to access
+    </div>
+    <button onclick="checkEquation()" style="width: 100%; margin-top: 10px; padding: 10px; background: #1a2a3a; border: 1px solid #3a5a6a; border-radius: 4px; color: #6a9aaa; cursor: pointer;">
+      Verify Solutions
+    </button>
+  </div>
+  
+  <!-- Wraith Panel -->
+  <div class="panel wraith-panel" id="wraithPanel" style="display: none;">
+    <h2>◈ WRAITH STATE</h2>
+    <p style="font-size: 0.8em; color: #4a6a4a; margin-bottom: 10px;">First glyph sets direction</p>
+    <div class="wraith-direction">
+      <button class="wraith-dir-btn active" onclick="setWraithDir('up')">↑<br><small>Read Up</small></button>
+      <button class="wraith-dir-btn" onclick="setWraithDir('down')">↓<br><small>Read Down</small></button>
+    </div>
+    <h3 style="font-size: 0.85em; color: #5a7a5a; margin: 15px 0 8px;">States of Being:</h3>
+    <div class="state-list">
+      <div class="state-item" onclick="addWraithState('existence')">◇ EXISTENCE</div>
+      <div class="state-item" onclick="addWraithState('void')">◆ VOID</div>
+      <div class="state-item" onclick="addWraithState('transition')">◈ TRANSITION</div>
+      <div class="state-item" onclick="addWraithState('binding')">⬡ BINDING</div>
+      <div class="state-item" onclick="addWraithState('release')">⬢ RELEASE</div>
+      <div class="state-item" onclick="addWraithState('consume')">▼ CONSUME</div>
+      <div class="state-item" onclick="addWraithState('manifest')">▲ MANIFEST</div>
+    </div>
+    <div class="info-callout">
+      Wraith glyphs force other languages to <strong>conform or be consumed</strong>.
+    </div>
+  </div>
+  
+  <!-- Glyph Library -->
+  <div class="panel library-panel">
+    <h2>📚 GLYPH LIBRARY</h2>
+    <div class="library-grid" id="libraryGrid">
+      <!-- Pre-loaded glyphs -->
+      <div class="glyph-item" onclick="loadGlyph('succor')">
+        <svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="18" fill="none" stroke="#3a8acc" stroke-width="2"/><polygon points="25,12 32,30 18,30" fill="none" stroke="#3a8acc" stroke-width="2"/></svg>
+        <span>Succor</span>
+      </div>
+      <div class="glyph-item" onclick="loadGlyph('seal')">
+        <svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="18" fill="none" stroke="#3a8acc" stroke-width="2"/><polygon points="25,10 40,25 25,40 10,25" fill="none" stroke="#3a8acc" stroke-width="2"/></svg>
+        <span>Seal</span>
+      </div>
+      <div class="glyph-item" onclick="loadGlyph('siphon')">
+        <svg viewBox="0 0 50 50"><path d="M25,8 Q35,20 30,32 Q25,44 25,44 Q25,44 20,32 Q15,20 25,8" fill="none" stroke="#cc3366" stroke-width="2"/><circle cx="25" cy="25" r="4" fill="#cc3366"/></svg>
+        <span>Siphon</span>
+      </div>
+      <div class="glyph-item" onclick="loadGlyph('heart')">
+        <svg viewBox="0 0 50 50"><path d="M25,40 Q10,30 10,20 Q10,10 20,10 Q25,10 25,15 Q25,10 30,10 Q40,10 40,20 Q40,30 25,40" fill="none" stroke="#ff6644" stroke-width="2"/><circle cx="25" cy="25" r="3" fill="#ff6644"/></svg>
+        <span>Heart</span>
+      </div>
+      <div class="glyph-item" onclick="loadGlyph('sight')">
+        <svg viewBox="0 0 50 50"><ellipse cx="25" cy="25" rx="18" ry="10" fill="none" stroke="#4a7c59" stroke-width="2"/><circle cx="25" cy="25" r="6" fill="none" stroke="#4a7c59" stroke-width="2"/><circle cx="25" cy="25" r="2" fill="#4a7c59"/></svg>
+        <span>Sight</span>
+      </div>
+      <div class="glyph-item" onclick="loadGlyph('blade')">
+        <svg viewBox="0 0 50 50"><line x1="25" y1="8" x2="25" y2="42" stroke="#d4c444" stroke-width="2"/><line x1="12" y1="25" x2="38" y2="25" stroke="#d4c444" stroke-width="2"/></svg>
+        <span>Blade</span>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Composition Canvas -->
+  <div class="panel composition-panel">
+    <h2>⚗ COMPOSITION — Ward Circle</h2>
+    <canvas id="compositionCanvas"></canvas>
+    <div class="comp-info">
+      <div>Zone: <span id="zoneLabel">CENTER (Runes)</span></div>
+      <div>Glyphs placed: <span id="glyphCount">0</span></div>
+      <div>Power level: <span id="powerLevel">0</span></div>
+    </div>
+  </div>
+  
+  <!-- Export -->
+  <div class="panel export-panel">
+    <h2>⬇ EXPORT</h2>
+    <button class="export-btn" onclick="exportSVG()">Export as SVG</button>
+    <button class="export-btn" onclick="exportPNG()">Export as PNG</button>
+    <button class="export-btn" onclick="exportJSON()">Export Definition</button>
+    <div class="info-callout" style="margin-top: 15px;">
+      Definitions include orientation, micro-rune equations, and zone placement.
+    </div>
+  </div>
+  
+</div>
+
+<script>
+// State
+let currentLanguage = 'rune';
+let currentTool = 'brush';
+let currentColor = '#8a6cc4';
+let currentOrientation = 0;
+let wraithDirection = 'up';
+let isDrawing = false;
+let lastX = 0, lastY = 0;
+let strokes = [];
+let currentStroke = [];
+let savedGlyphs = [];
+
+// Canvas setup
+const mainCanvas = document.getElementById('mainCanvas');
+const mainCtx = mainCanvas.getContext('2d');
+const compCanvas = document.getElementById('compositionCanvas');
+const compCtx = compCanvas.getContext('2d');
+
+function resizeCanvases() {
+  const rect1 = mainCanvas.getBoundingClientRect();
+  mainCanvas.width = rect1.width;
+  mainCanvas.height = rect1.height;
+  
+  const rect2 = compCanvas.getBoundingClientRect();
+  compCanvas.width = rect2.width;
+  compCanvas.height = rect2.height;
+  
+  redraw();
+  drawComposition();
+}
+
+window.addEventListener('resize', resizeCanvases);
+setTimeout(resizeCanvases, 100);
+
+// Language switching
+function setLanguage(lang) {
+  currentLanguage = lang;
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.remove('active-rune', 'active-ward', 'active-wraith');
+    if (btn.dataset.lang === lang) {
+      btn.classList.add('active-' + lang);
+    }
+  });
+  
+  // Show/hide panels
+  document.getElementById('runeOrientation').style.display = (lang === 'rune') ? 'block' : 'none';
+  document.getElementById('microRunePanel').style.display = (lang === 'rune') ? 'block' : 'none';
+  document.getElementById('wraithPanel').style.display = (lang === 'wraith') ? 'block' : 'none';
+  
+  // Update colors
+  if (lang === 'rune') setColor('#8a6cc4');
+  else if (lang === 'ward') setColor('#3a8acc');
+  else if (lang === 'wraith') setColor('#4a7c59');
+}
+
+// Drawing tools
+function setTool(tool) {
+  currentTool = tool;
+  document.querySelectorAll('.canvas-controls button').forEach(btn => btn.classList.remove('active'));
+  document.getElementById(tool + 'Btn')?.classList.add('active');
+}
+
+function setColor(color) {
+  currentColor = color;
+  document.querySelectorAll('.color-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.style.background === color || btn.style.backgroundColor === color);
+  });
+}
+
+function setOrientation(angle) {
+  currentOrientation = angle;
+  document.querySelectorAll('.orient-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  const labels = {
+    0: 'UPRIGHT (Base)',
+    45: 'TILT RIGHT (Additive)',
+    '-45': 'TILT LEFT (Subtractive)',
+    90: 'RIGHT (Greater)',
+    '-90': 'LEFT (Lesser)',
+    180: 'INVERTED (Opposite)',
+    135: 'DOWN-RIGHT',
+    '-135': 'DOWN-LEFT'
+  };
+  document.getElementById('orientLabel').textContent = labels[angle] || angle + '°';
+  redraw();
+}
+
+// Drawing handlers
+mainCanvas.addEventListener('mousedown', startDraw);
+mainCanvas.addEventListener('mousemove', draw);
+mainCanvas.addEventListener('mouseup', endDraw);
+mainCanvas.addEventListener('mouseleave', endDraw);
+
+// Touch support
+mainCanvas.addEventListener('touchstart', e => { e.preventDefault(); startDraw(e.touches[0]); });
+mainCanvas.addEventListener('touchmove', e => { e.preventDefault(); draw(e.touches[0]); });
+mainCanvas.addEventListener('touchend', endDraw);
+
+function getPos(e) {
+  const rect = mainCanvas.getBoundingClientRect();
+  return {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top
+  };
+}
+
+function startDraw(e) {
+  isDrawing = true;
+  const pos = getPos(e);
+  lastX = pos.x;
+  lastY = pos.y;
+  currentStroke = [{x: pos.x, y: pos.y, color: currentColor}];
+}
+
+function draw(e) {
+  if (!isDrawing) return;
+  const pos = getPos(e);
+  
+  if (currentTool === 'brush') {
+    mainCtx.beginPath();
+    mainCtx.moveTo(lastX, lastY);
+    mainCtx.lineTo(pos.x, pos.y);
+    mainCtx.strokeStyle = currentColor;
+    mainCtx.lineWidth = 2;
+    mainCtx.lineCap = 'round';
+    mainCtx.stroke();
+    
+    currentStroke.push({x: pos.x, y: pos.y, color: currentColor});
+  }
+  
+  lastX = pos.x;
+  lastY = pos.y;
+}
+
+function endDraw(e) {
+  if (!isDrawing) return;
+  isDrawing = false;
+  
+  if (currentTool === 'line' && currentStroke.length > 0) {
+    const start = currentStroke[0];
+    mainCtx.beginPath();
+    mainCtx.moveTo(start.x, start.y);
+    mainCtx.lineTo(lastX, lastY);
+    mainCtx.strokeStyle = currentColor;
+    mainCtx.lineWidth = 2;
+    mainCtx.stroke();
+    currentStroke.push({x: lastX, y: lastY, color: currentColor});
+  }
+  
+  if (currentTool === 'circle' && currentStroke.length > 0) {
+    const start = currentStroke[0];
+    const radius = Math.sqrt(Math.pow(lastX - start.x, 2) + Math.pow(lastY - start.y, 2));
+    mainCtx.beginPath();
+    mainCtx.arc(start.x, start.y, radius, 0, Math.PI * 2);
+    mainCtx.strokeStyle = currentColor;
+    mainCtx.lineWidth = 2;
+    mainCtx.stroke();
+    currentStroke = [{x: start.x, y: start.y, radius: radius, type: 'circle', color: currentColor}];
+  }
+  
+  if (currentStroke.length > 0) {
+    strokes.push({
+      points: [...currentStroke],
+      tool: currentTool,
+      color: currentColor,
+      orientation: currentOrientation,
+      language: currentLanguage
+    });
+  }
+  currentStroke = [];
+}
+
+function undo() {
+  strokes.pop();
+  redraw();
+}
+
+function clearCanvas() {
+  strokes = [];
+  redraw();
+}
+
+function redraw() {
+  mainCtx.fillStyle = '#08080c';
+  mainCtx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
+  
+  // Apply rotation for runes
+  if (currentLanguage === 'rune' && currentOrientation !== 0) {
+    mainCtx.save();
+    mainCtx.translate(mainCanvas.width / 2, mainCanvas.height / 2);
+    mainCtx.rotate(currentOrientation * Math.PI / 180);
+    mainCtx.translate(-mainCanvas.width / 2, -mainCanvas.height / 2);
+  }
+  
+  strokes.forEach(stroke => {
+    mainCtx.strokeStyle = stroke.color;
+    mainCtx.lineWidth = 2;
+    mainCtx.lineCap = 'round';
+    
+    if (stroke.tool === 'circle' && stroke.points[0]?.radius) {
+      mainCtx.beginPath();
+      mainCtx.arc(stroke.points[0].x, stroke.points[0].y, stroke.points[0].radius, 0, Math.PI * 2);
+      mainCtx.stroke();
+    } else if (stroke.points.length > 1) {
+      mainCtx.beginPath();
+      mainCtx.moveTo(stroke.points[0].x, stroke.points[0].y);
+      for (let i = 1; i < stroke.points.length; i++) {
+        mainCtx.lineTo(stroke.points[i].x, stroke.points[i].y);
+      }
+      mainCtx.stroke();
+    }
+  });
+  
+  if (currentLanguage === 'rune' && currentOrientation !== 0) {
+    mainCtx.restore();
+  }
+}
+
+// Micro-rune equation verification
+function checkEquation() {
+  const input = document.getElementById('equationInput').value;
+  const values = input.split(',').map(v => parseFloat(v.trim()));
+  
+  // Expected: sin(45°) ≈ 0.707, cos(120°) ≈ -0.5, tan(60°) ≈ 1.732
+  const expected = [0.707, -0.5, 1.732];
+  const tolerance = 0.01;
+  
+  let correct = values.length === 3;
+  if (correct) {
+    for (let i = 0; i < 3; i++) {
+      if (Math.abs(values[i] - expected[i]) > tolerance) {
+        correct = false;
+        break;
+      }
+    }
+  }
+  
+  const status = document.getElementById('equationStatus');
+  if (correct) {
+    status.className = 'equation-status status-unlocked';
+    status.textContent = '🔓 RUNE UNLOCKED — Access granted';
+  } else {
+    status.className = 'equation-status status-locked';
+    status.textContent = '🔒 INCORRECT — Rune remains locked';
+  }
+}
+
+// Wraith controls
+function setWraithDir(dir) {
+  wraithDirection = dir;
+  document.querySelectorAll('.wraith-dir-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.closest('.wraith-dir-btn').classList.add('active');
+}
+
+function addWraithState(state) {
+  console.log('Adding wraith state:', state);
+  // Would add to composition
+}
+
+// Composition canvas
+function drawComposition() {
+  const w = compCanvas.width;
+  const h = compCanvas.height;
+  const cx = w / 2;
+  const cy = h / 2;
+  
+  compCtx.fillStyle = '#05050a';
+  compCtx.fillRect(0, 0, w, h);
+  
+  // Draw ward circle zones
+  // Outer ring
+  compCtx.beginPath();
+  compCtx.arc(cx, cy, 140, 0, Math.PI * 2);
+  compCtx.strokeStyle = '#2a4a2a';
+  compCtx.lineWidth = 2;
+  compCtx.stroke();
+  
+  // Inner ring
+  compCtx.beginPath();
+  compCtx.arc(cx, cy, 100, 0, Math.PI * 2);
+  compCtx.strokeStyle = '#2a3a5a';
+  compCtx.stroke();
+  
+  // Center
+  compCtx.beginPath();
+  compCtx.arc(cx, cy, 50, 0, Math.PI * 2);
+  compCtx.strokeStyle = '#4a3a5a';
+  compCtx.stroke();
+  
+  // Zone labels
+  compCtx.fillStyle = '#3a3a4a';
+  compCtx.font = '10px sans-serif';
+  compCtx.textAlign = 'center';
+  compCtx.fillText('OUTER (Glyphs)', cx, cy - 115);
+  compCtx.fillText('INNER (Wards)', cx, cy - 75);
+  compCtx.fillText('CENTER (Runes)', cx, cy);
+}
+
+setTimeout(drawComposition, 200);
+
+// Save glyph to library
+function saveGlyph() {
+  const name = prompt('Name this glyph:');
+  if (!name) return;
+  
+  // Create thumbnail
+  const thumb = mainCanvas.toDataURL();
+  savedGlyphs.push({
+    name: name,
+    strokes: [...strokes],
+    orientation: currentOrientation,
+    language: currentLanguage,
+    thumbnail: thumb
+  });
+  
+  // Add to library grid
+  const grid = document.getElementById('libraryGrid');
+  const item = document.createElement('div');
+  item.className = 'glyph-item';
+  item.innerHTML = `<img src="${thumb}" style="width:50px;height:50px;object-fit:contain;"><span>${name}</span>`;
+  item.onclick = () => loadSavedGlyph(savedGlyphs.length - 1);
+  grid.appendChild(item);
+}
+
+function loadSavedGlyph(index) {
+  const glyph = savedGlyphs[index];
+  if (!glyph) return;
+  strokes = [...glyph.strokes];
+  currentOrientation = glyph.orientation;
+  setLanguage(glyph.language);
+  redraw();
+}
+
+function loadGlyph(name) {
+  console.log('Loading preset glyph:', name);
+  // Would load preset glyph data
+}
+
+// Export functions
+function exportSVG() {
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${mainCanvas.width} ${mainCanvas.height}">`;
+  svg += `<rect width="100%" height="100%" fill="#08080c"/>`;
+  
+  strokes.forEach(stroke => {
+    if (stroke.points.length > 1) {
+      svg += `<path d="M${stroke.points.map(p => `${p.x},${p.y}`).join(' L')}" fill="none" stroke="${stroke.color}" stroke-width="2"/>`;
+    }
+  });
+  
+  svg += '</svg>';
+  
+  const blob = new Blob([svg], {type: 'image/svg+xml'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'glyph.svg';
+  a.click();
+}
+
+function exportPNG() {
+  const url = mainCanvas.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'glyph.png';
+  a.click();
+}
+
+function exportJSON() {
+  const data = {
+    language: currentLanguage,
+    orientation: currentOrientation,
+    strokes: strokes,
+    microRuneEquations: ['sin(45°)', 'cos(120°)', 'tan(60°)'],
+    wraithDirection: wraithDirection,
+    timestamp: new Date().toISOString()
+  };
+  
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'glyph-definition.json';
+  a.click();
+}
+</script>
+
+</body>
+</html>
